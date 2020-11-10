@@ -24,6 +24,8 @@ BLEBas  blebas;  // battery
 String ID = "BPC";
 
 void setup() {
+
+  Serial.begin(115200);
   
   Bluefruit.begin();
   Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
@@ -107,20 +109,22 @@ void ButcherByte(uint8_t rawByteValues[]){
   uint8_t token[20];
   uint16_t counter = 0;
   
-  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS +2; i++) {
-    token[counter] = rawByteValues[i];
+  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS ; i++) {
+    token[counter] = rawByteValues[i]+1;
+    //Serial.println(token[counter]);
     counter++;
     
-    if (counter == 20 || i == NUM_ROWS * NUM_COLUMNS + 2){
-      if (i == NUM_ROWS * NUM_COLUMNS + 2){
-        token[14] = (0xFF<<8);
-        token[15] = (0x00<<8);
-        token[16] = (0xFF<<8);
-        token[17] = (0x00<<8);
-        token[18] = (0xFF<<8);
-        token[19] = (0x00<<8);
+    if (counter == 20 || i == NUM_ROWS * NUM_COLUMNS -1){
+      if (counter != 20 && i == NUM_ROWS * NUM_COLUMNS -1){
+        token[counter] = (0x00<<8);
+        //Serial.println("0 - 0");
       }
       bleuart.write(token, 20);
+      
+      if (counter == 20 && i == NUM_ROWS * NUM_COLUMNS -1){
+        bleuart.write((0x00<<8), 1);
+        //Serial.println("0 - 1");
+      }
       counter = 0;
     }  
   }
@@ -139,7 +143,7 @@ void ButcherStr(String str){
     str.remove(0, pos + separator.length());
     counter++;
     
-    if (counter == 4){
+    if (counter == 5){
       bleuart.print(token);
       token = "";
       counter = 0;
@@ -174,15 +178,15 @@ void SendRawString() {
 
 
 void SendRawByte() {
-  // The array is composed of 254 bytes. The two first for the minimum, the 252 others for the values.
+  // The array is composed of 252 bytes. Already calibrated
   // HIGH byte minimum | LOW byte minimum  | value 1
 
   unsigned int minimum = 80000;
-  uint8_t rawByteValues[254];
+  uint8_t rawByteValues[252];
 
   for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
   if (muca.grid[i] > 0 && minimum > muca.grid[i])  {
-      minimum = muca.grid[i]; // The +30 is to be sure it's positive
+      minimum = muca.grid[i];
     }
   }
   rawByteValues[0] = highByte(minimum);
@@ -204,7 +208,7 @@ void SendFalseRawString() {
   String str = "";
   for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
     
-    str += i; // The +30 is to be sure it's positive
+    str += i; // i The +30 is to be sure it's positive
     if (i != NUM_ROWS * NUM_COLUMNS - 1) str += ",";
   }
   
@@ -214,14 +218,25 @@ void SendFalseRawString() {
 
 }
 
+void SendFalseRawByte() {
+  // Print the array value
+  uint8_t rawByteValues[252];
+  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+    rawByteValues[i] = byte(i); // i The +30 is to be sure it's positive
+  }
+  
+  ButcherByte(rawByteValues);
+
+}
+
 void loop() {
   
   //if (muca.updated()) {
     //SendRawByte(); // Faster
     //SendRawString();  
   //}
-  SendFalseRawString();
-  //delay(16); // waiting 16ms for 60fps
-  delay(500);
+  //SendFalseRawString();
+  SendFalseRawByte();
+  delay(16); // waiting 16ms for 60fps
 
 }

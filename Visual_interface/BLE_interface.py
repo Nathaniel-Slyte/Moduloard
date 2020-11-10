@@ -3,29 +3,29 @@ import platform
 import Interface
 from bleak import discover, BleakClient
 
+from myqueue import DATA_QUEUE
+
 BPClist = []
 MODEL_NBR_UUID = "00002a24-0000-1000-8000-00805f9b34fb"
 UUID_NORDIC_TX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
 UUID_NORDIC_RX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
 
-pos = 0
+table = ""
 
 def UARTDataReceived(sender, data):
-    # ###############################
-    # A refaire, c'est de la merde.
-    # Renvoyer toute la matrice dans la queue sous la forme d'un string et la parse de l'autre côté
-    global pos
-    if pos >= (Interface.NB_ROW * Interface.NB_COLOMN):
-        pos = 0
-    data = data.decode()
-    data = data.split(",")
-    for i in data:
-        if i != "":
-            Interface.data_queue[pos] = i
-            print("RX> {0}".format(i))
-            pos += 
-    
-    # print("RX> {0}".format(str(data)))
+    global table
+    i = 0
+    while i < len(data) :
+        # print(data[i] -1)
+        if int(data[i]) == 0:
+            print(table)
+            print("LA BAS", id(DATA_QUEUE))
+            DATA_QUEUE.put(table)
+            i = len(data)
+            table = ""
+        else :
+            table += str(data[i]-1) + ","
+        i += 1
 
 async def Snif():
     devices = await discover(timeout= 2.0)
@@ -35,7 +35,14 @@ async def Snif():
             BPClist.append(d.address)
 
 async def ConnectUART(address, loop):
-    async with BleakClient(address, loop=loop) as client:
+    
+    disconnected_event = asyncio.Event()
+
+    def disconnected_callback(client):
+        print("Disconnected callback called!")
+        disconnected_event.set()
+
+    async with BleakClient(address, loop=loop, disconnected_callback=disconnected_callback) as client:
         x = await client.is_connected()
         print("Connected: {0}".format(x))
 
@@ -75,12 +82,23 @@ async def GetUUID(address: str, loop):
                         )
                     )
 
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
 
-    while len(BPClist) == 0 :
-        loop.run_until_complete(Snif())
-    print("Found BPC, address : {}".format(BPClist[0]))
-    # loop.run_until_complete(PrintServices(BPClist[0]))
-    loop.run_until_complete(GetUUID(BPClist[0], loop))
-    loop.run_until_complete(ConnectUART(BPClist[0], loop))
+def Main():
+    # loop = asyncio.get_event_loop()
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+
+    try:
+        while len(BPClist) == 0 :
+            loop.run_until_complete(Snif())
+        print("Found BPC, address : {}".format(BPClist[0]))
+
+        loop.run_until_complete(GetUUID(BPClist[0], loop))
+        loop.run_until_complete(ConnectUART(BPClist[0], loop))
+    except (KeyboardInterrupt, SystemExit):
+        pass
+
+if __name__ == '__main__':
+    Main()
