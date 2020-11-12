@@ -20,6 +20,10 @@ BLEDis  bledis;  // device information
 BLEUart bleuart; // uart over ble
 BLEBas  blebas;  // battery
 
+#define CALIBRATION_STEPS 20
+short currentCalibrationStep = 0;
+unsigned int calibrationGrid[NUM_ROWS * NUM_COLUMNS];
+
 
 String ID = "BPC";
 
@@ -46,17 +50,12 @@ void setup() {
 
   startAdv();
 
-  //muca.init();
-  //muca.useRawData(true); // If you use the raw data, the interrupt is not working
+  muca.init();
+  muca.useRawData(true); // If you use the raw data, the interrupt is not working
 
   delay(50);
-  //muca.setGain(2);
+  muca.setGain(8);
 }
-
-
-
-
-
 
 
 
@@ -132,51 +131,6 @@ void ButcherByte(uint8_t rawByteValues[]){
 
 
 
-void ButcherStr(String str){
-  String separator = ",";
-  int counter = 0;
-  
-  int pos = 0;
-  String token = "";
-  while ((pos = str.indexOf(',')) != -1) {
-    token += str.substring(0, pos) + ",";
-    str.remove(0, pos + separator.length());
-    counter++;
-    
-    if (counter == 5){
-      bleuart.print(token);
-      token = "";
-      counter = 0;
-    } 
-    delay(1);
-  }
-  if (pos == -1 && token != "" ){
-    token += str;
-    bleuart.print(token);
-  }
-  delay(1);
-}
-
-
-
-
-
-void SendRawString() {
-  // Print the array value
-  String str = "";
-  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
-    
-    if (muca.grid[i] >= 0) str += (muca.grid[i]); // The +30 is to be sure it's positive
-    if (i != NUM_ROWS * NUM_COLUMNS - 1) str += ",";
-  }
-  
-  ButcherStr(str);
-  bleuart.print("\n");
-  str = "";
-
-}
-
-
 void SendRawByte() {
   // The array is composed of 252 bytes. Already calibrated
   // HIGH byte minimum | LOW byte minimum  | value 1
@@ -185,38 +139,41 @@ void SendRawByte() {
   uint8_t rawByteValues[252];
 
   for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
-  if (muca.grid[i] > 0 && minimum > muca.grid[i])  {
-      minimum = muca.grid[i];
-    }
-  }
-  rawByteValues[0] = highByte(minimum);
-  rawByteValues[1] = lowByte(minimum);
-
-
-  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
-    rawByteValues[i + 2] = muca.grid[i] - minimum;
-
+  if (muca.grid[i] > 0) rawByteValues[i + 2] = muca.grid[i] - minimum;
   }
 
   ButcherByte(rawByteValues);
 }
 
-
-
-void SendFalseRawString() {
-  // Print the array value
-  String str = "";
-  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+void GetRaw() {
+  if (muca.updated()) {
+    uint8_t rawByteValues[252];
     
-    str += i; // i The +30 is to be sure it's positive
-    if (i != NUM_ROWS * NUM_COLUMNS - 1) str += ",";
-  }
-  
-  ButcherStr(str);
-  bleuart.print("\n");
-  str = "";
+    if (currentCalibrationStep >= CALIBRATION_STEPS) {
+      // Print the array value
+      for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+        if (muca.grid[i] > 0) rawByteValues[i] = (muca.grid[i] - calibrationGrid[i] ) + 20; // The +30 is to be sure it's positive
+        Serial.print(muca.grid[i]);
+        Serial.print(",");
+      }
+      Serial.println();
+      ButcherByte(rawByteValues);
+    }
+    else { // Once the calibration is done
+      //Save the grid value to the calibration array
+      for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+        if (currentCalibrationStep == 0) calibrationGrid[i] = muca.grid[i]; // Copy array
+        else calibrationGrid[i] = (calibrationGrid[i] + muca.grid[i]) / 2 ; // Get average
+      }
+        currentCalibrationStep++;
+        Serial.print("Calibration performed "); Serial.print(currentCalibrationStep); Serial.print("/"); Serial.println(CALIBRATION_STEPS);
+    }
 
+  } // End Muca Updated
+
+  delay(1);
 }
+
 
 void SendFalseRawByte() {
   // Print the array value
@@ -235,8 +192,8 @@ void loop() {
     //SendRawByte(); // Faster
     //SendRawString();  
   //}
-  //SendFalseRawString();
-  SendFalseRawByte();
+  //SendFalseRawByte();
+  GetRaw();
   delay(16); // waiting 16ms for 60fps
 
 }
