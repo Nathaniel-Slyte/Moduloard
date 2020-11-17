@@ -4,12 +4,11 @@ from queue import Queue
 
 from myqueue import DATA_QUEUE
 
-BPClist = []
-
 
 class Device:
-    def __init__(self, address: str):
-        self.DATA_QUEUE         = Queue(maxsize=10)
+    def __init__(self, address: str, queue_init):
+        self.DATA_QUEUE         = queue_init
+        print(id(self.DATA_QUEUE))
         self.UUID_NORDIC_TX     = ""
         self.UUID_NORDIC_RX     = ""
         self.table              = ""
@@ -66,9 +65,9 @@ class Device:
             # print(data[i] -1)
             if int(data[i]) == 0:
                 print(self.table)
-                print("LA BAS", id(DATA_QUEUE))
+                # print("LA BAS", id(DATA_QUEUE))
                 if len(self.table.split(',')) >= 21*12-1:
-                     DATA_QUEUE.put(self.table)
+                    self.DATA_QUEUE.put(self.table)
                 i = len(data)
                 self.table = ""
             else :
@@ -76,32 +75,39 @@ class Device:
             i += 1
 
 
-async def Snif():
-    devices = await discover(timeout= 2.0)
+async def Snif(address_list):
+    devices = await discover(timeout= 1.0)
     for d in devices:
-        print(d)
+        #print(d)
         if (d.name == "BPC"):
-            BPClist.append(d.address)
+            address_list.append(d.address)
 
 
-def Main():
-    # loop = asyncio.get_event_loop()
-
+def GetAddress():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
+    BPClist = []
 
-    try:
-        while len(BPClist) == 0 :
-            loop.run_until_complete(Snif())
-        print("Found BPC, address : {}".format(BPClist[0]))
-        device1 = Device(BPClist[0])
-        device1.Connect()
+    i = 0
+    while i < 5 :
+            loop.run_until_complete(Snif(BPClist))
+            i += 1
+    i = 0
+    BPClist = list(set(BPClist))
+    while i < len(BPClist):
+        print("Found BPC, address : {}".format(BPClist[i]))
+        i +=1
+    return BPClist
 
-        # loop.run_until_complete(GetUUID(BPClist[0], loop))
-        # loop.run_until_complete(ConnectUART(BPClist[0], loop))
-    except (KeyboardInterrupt, SystemExit):
-        pass
 
 if __name__ == '__main__':
-    Main()
+    # Main()
+    address = GetAddress()
+    try:
+        print("Create a class")
+        # device1 = Device(address[0])
+        print("start Connection")
+        # device1.Connect()
+    except (KeyboardInterrupt, SystemExit):
+        pass

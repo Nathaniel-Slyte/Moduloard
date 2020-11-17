@@ -1,7 +1,9 @@
-import queue, threading
+import threading
 import pygame 
 import BLE_interface
 
+from queue import Queue
+from bleak import discover
 from myqueue import DATA_QUEUE
 
 NB_ROW     = 21
@@ -70,18 +72,19 @@ def main():
 
     # create a surface on screen that has the size of 240 x 180
     my_screen = pygame.display.set_mode((NB_COLOMN * SIZE_PIXEL , NB_ROW * SIZE_PIXEL))
-    
+
     # define a variable to control the main loop
     running = True
     PixelsInit(my_screen)
     
+    
 
     # main loop
     while running:
-
-        state = UpdatePixels(my_screen)
+        print("I'm here !")
+        # state = UpdatePixels(my_screen)
         # if state == True :
-        pygame.display.flip() # Update values on screen
+        # pygame.display.flip() # Update values on screen
         # event handling, gets all event from the event queue
         for event in pygame.event.get():
             # only do something if the event is of type QUIT
@@ -93,5 +96,15 @@ def main():
 
 if __name__ == '__main__':
     print("Interface file connected")
-    threading.Thread(target=BLE_interface.Main, daemon=True).start()
-    main()
+    address = BLE_interface.GetAddress()
+    # if len(address) > 0:
+    # try: 
+    print("Create a class")
+    DATA_QUEUE = Queue(maxsize=10)
+    print(id(DATA_QUEUE))
+    device1 = BLE_interface.Device(address[0], DATA_QUEUE)
+    # main()
+    # print("Connection")
+    # threading.Thread(target=device1.Connect(), daemon=True).start()
+    # except (KeyboardInterrupt, SystemExit):
+    #     pass
