@@ -1,6 +1,7 @@
 import threading
 import pygame 
 import BLE_interface
+import asyncio
 
 from queue import Queue
 from bleak import discover
@@ -65,6 +66,19 @@ def UpdatePixels(screen):
     return True
 
 
+# class myThread (threading.Thread):
+#    def __init__(self, name, address, queue_init):
+#       threading.Thread.__init__(self)
+#       self.address = address
+#       self.name = name
+#       self.queue_init = queue_init
+#    def run(self):
+#       print ("Starting " + self.name)
+#       device = BLE_interface.Device(self.address, self.queue_init)
+#       device.Connect()
+#       print ("Exiting " + self.name)
+
+
 def main():
 
     # Initialize pygame module
@@ -102,8 +116,13 @@ if __name__ == '__main__':
     print("Create a class")
     DATA_QUEUE = Queue(maxsize=10)
     print(id(DATA_QUEUE))
-    device1 = BLE_interface.Device(address[0], DATA_QUEUE)
-    # main()
+    # device1 = BLE_interface.Device(address[0], DATA_QUEUE)
+
+    asyncio.get_event_loop().create_task(BLE_interface.main(address[0], DATA_QUEUE))
+
+    # thread = myThread("device1", address[0], DATA_QUEUE)
+    # thread.start()
+    main()
     # print("Connection")
     # threading.Thread(target=device1.Connect(), daemon=True).start()
     # except (KeyboardInterrupt, SystemExit):

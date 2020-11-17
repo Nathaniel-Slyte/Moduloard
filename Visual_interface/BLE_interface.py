@@ -101,6 +101,11 @@ def GetAddress():
     return BPClist
 
 
+def main(address, my_queue):
+    device1 = Device(address, my_queue)
+    device1.Connect()
+
+
 if __name__ == '__main__':
     # Main()
     address = GetAddress()
