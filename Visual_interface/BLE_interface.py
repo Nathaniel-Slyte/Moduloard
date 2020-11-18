@@ -6,7 +6,7 @@ from myqueue import DATA_QUEUE
 
 
 class Device:
-    def __init__(self, address: str, queue_init):
+    def __init__(self, loop, address: str, queue_init):
         self.DATA_QUEUE         = queue_init
         print(id(self.DATA_QUEUE))
         self.UUID_NORDIC_TX     = ""
@@ -15,8 +15,8 @@ class Device:
         self.address            = address
 
         self.disconnected_event = asyncio.Event()
-        self.loop               = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        self.loop               = loop
+        # asyncio.set_event_loop(self.loop)
 
 
     def Connect (self):
@@ -102,9 +102,13 @@ def GetAddress():
     return BPClist
 
 
-def main(address, my_queue):
-    device1 = Device(address, my_queue)
-    device1.Connect()
+def main(loop ,address, my_queue):
+    try:
+        device1 = Device(loop, address, my_queue)
+        device1.Connect()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+
 
 
 if __name__ == '__main__':

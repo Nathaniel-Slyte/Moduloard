@@ -65,20 +65,6 @@ def UpdatePixels(screen):
     
     return True
 
-
-# class myThread (threading.Thread):
-#    def __init__(self, name, address, queue_init):
-#       threading.Thread.__init__(self)
-#       self.address = address
-#       self.name = name
-#       self.queue_init = queue_init
-#    def run(self):
-#       print ("Starting " + self.name)
-#       device = BLE_interface.Device(self.address, self.queue_init)
-#       device.Connect()
-#       print ("Exiting " + self.name)
-
-
 def main():
 
     # Initialize pygame module
@@ -95,9 +81,9 @@ def main():
 
     # main loop
     while running:
-        # state = UpdatePixels(my_screen)
+        state = UpdatePixels(my_screen)
         # if state == True :
-        # pygame.display.flip() # Update values on screen
+        pygame.display.flip() # Update values on screen
         # event handling, gets all event from the event queue
         for event in pygame.event.get():
             # only do something if the event is of type QUIT
@@ -117,10 +103,11 @@ if __name__ == '__main__':
     DATA_QUEUE1 = Queue(maxsize=10)
     print(id(DATA_QUEUE1))
     # device1 = BLE_interface.Device(address[0], DATA_QUEUE)
-
-    pygame_task = loop.run_in_executor(None,main)
-    device = asyncio.ensure_future(BLE_interface.main(address[0], DATA_QUEUE1))
-
+    try:
+        pygame_task = loop.run_in_executor(None,main)
+        device = asyncio.ensure_future(BLE_interface.main(loop, address[0], DATA_QUEUE1))
+    except (KeyboardInterrupt, SystemExit):
+        pass
     # thread = myThread("device1", address[0], DATA_QUEUE)
     # thread.start()
     # print("Connection")
