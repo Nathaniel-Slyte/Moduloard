@@ -91,11 +91,10 @@ def main():
     running = True
     PixelsInit(my_screen)
     
-    
+    print("Entered Main Pygame")
 
     # main loop
     while running:
-        print("I'm here !")
         # state = UpdatePixels(my_screen)
         # if state == True :
         # pygame.display.flip() # Update values on screen
@@ -110,19 +109,20 @@ def main():
 
 if __name__ == '__main__':
     print("Interface file connected")
+    loop = asyncio.get_event_loop()
     address = BLE_interface.GetAddress()
     # if len(address) > 0:
     # try: 
     print("Create a class")
-    DATA_QUEUE = Queue(maxsize=10)
-    print(id(DATA_QUEUE))
+    DATA_QUEUE1 = Queue(maxsize=10)
+    print(id(DATA_QUEUE1))
     # device1 = BLE_interface.Device(address[0], DATA_QUEUE)
 
-    asyncio.get_event_loop().create_task(BLE_interface.main(address[0], DATA_QUEUE))
+    pygame_task = loop.run_in_executor(None,main)
+    device = asyncio.ensure_future(BLE_interface.main(address[0], DATA_QUEUE1))
 
     # thread = myThread("device1", address[0], DATA_QUEUE)
     # thread.start()
-    main()
     # print("Connection")
     # threading.Thread(target=device1.Connect(), daemon=True).start()
     # except (KeyboardInterrupt, SystemExit):

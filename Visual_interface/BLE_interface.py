@@ -55,6 +55,7 @@ class Device:
             print("Connected: {0}".format(x))
 
             await client.start_notify(self.UUID_NORDIC_RX, self.UARTDataReceived)
+            print("Notify enable")
             while True :
                 await asyncio.sleep(1.0, loop=self.loop)
                 # await client.write_gatt_char(UUID_NORDIC_TX, bytearray(b"0"), True)
