@@ -4,22 +4,19 @@ import BLE_interface
 import asyncio
 
 from queue import Queue
-from bleak import discover
-from myqueue import DATA_QUEUE
 
-NB_ROW     = 21
-NB_COLOMN  = 12
-SIZE_PIXEL = 40
-pixels     = []
+NB_ROW          = 21
+NB_COLOMN       = 12
+SIZE_PIXEL      = 40
 
-def AddQueue(table:str):
-    DATA_QUEUE.put(table)
-    print("Added in queue")
+DEVICE_QUEUE    = []
+DEVICE          = []
+pixels          = []
 
-def Dequeue():
-    print("ICI", id(DATA_QUEUE))
-    item = DATA_QUEUE.get()
-    # data_queue.task_done()
+def Dequeue(device : int):
+    print("ICI", id(DEVICE_QUEUE[device]))
+    item = DEVICE_QUEUE[device].get()
+    # DEVICE_QUEUE.task_done()
     return item
 
 def DataParser(data : str):
@@ -28,14 +25,14 @@ def DataParser(data : str):
     return data
 
 
-def PixelsInit(screen):
+def PixelsInit(screen, device : int):
     rgb = 0
     table = ""
     while rgb < (NB_ROW*NB_COLOMN):
         table += str(0) + ","
         pixels.append(pygame.Surface((SIZE_PIXEL,SIZE_PIXEL)))
         rgb+=1
-    DATA_QUEUE.put(table)
+    DEVICE_QUEUE[device].put(table)
     data_table = DataParser(table)
     SetPixels(screen, data_table)
 
@@ -56,8 +53,8 @@ def SetPixels(screen, data_table):
         posX =0
     print ("Pixels set !")
 
-def UpdatePixels(screen):
-    raw_table = Dequeue()
+def UpdatePixels(screen, device :int):
+    raw_table = Dequeue(device)
     # if not raw_table:
     #     return False
     data_table = DataParser(raw_table)
@@ -75,13 +72,13 @@ def main():
 
     # define a variable to control the main loop
     running = True
-    PixelsInit(my_screen)
+    PixelsInit(my_screen, 0)
     
     print("Entered Main Pygame")
 
     # main loop
     while running:
-        state = UpdatePixels(my_screen)
+        state = UpdatePixels(my_screen, 0)
         # if state == True :
         pygame.display.flip() # Update values on screen
         # event handling, gets all event from the event queue
@@ -97,20 +94,25 @@ if __name__ == '__main__':
     print("Interface file connected")
     loop = asyncio.get_event_loop()
     address = BLE_interface.GetAddress()
-    # if len(address) > 0:
-    # try: 
-    print("Create a class")
-    DATA_QUEUE1 = Queue(maxsize=10)
-    print(id(DATA_QUEUE1))
-    # device1 = BLE_interface.Device(address[0], DATA_QUEUE)
+
+    for i in address:
+        DEVICE_QUEUE.append(Queue(maxsize=10))
+
+    # DEVICE_QUEUE = Queue(maxsize=10)
+    # print(id(DEVICE_QUEUE))
     try:
         pygame_task = loop.run_in_executor(None,main)
-        device = asyncio.ensure_future(BLE_interface.main(loop, address[0], DATA_QUEUE1))
+        for i in range(len(address)):
+            DEVICE.append(asyncio.ensure_future(BLE_interface.main(loop, address[i], DEVICE_QUEUE[i])))
+            
     except (KeyboardInterrupt, SystemExit):
-        pass
-    # thread = myThread("device1", address[0], DATA_QUEUE)
-    # thread.start()
+        loop.stop()
+        # pass
+
+
+
     # print("Connection")
+    # device1 = BLE_interface.Device(address[0], DEVICE_QUEUE)
     # threading.Thread(target=device1.Connect(), daemon=True).start()
     # except (KeyboardInterrupt, SystemExit):
     #     pass
