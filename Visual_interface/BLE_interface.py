@@ -8,7 +8,6 @@ from myqueue import DATA_QUEUE
 class Device:
     def __init__(self, loop, address: str, queue_init):
         self.DATA_QUEUE         = queue_init
-        print(id(self.DATA_QUEUE))
         self.UUID_NORDIC_TX     = ""
         self.UUID_NORDIC_RX     = ""
         self.table              = ""
@@ -63,16 +62,19 @@ class Device:
     def UARTDataReceived(self, sender, data):
         i = 0
         while i < len(data) :
-            # print(data[i] -1)
+
             if int(data[i]) == 0:
-                print(self.table)
+                print("my addresse : {}".format(self.address))
+                # print(self.table)
                 # print("LA BAS", id(DATA_QUEUE))
                 if len(self.table.split(',')) >= 21*12-1:
                     self.DATA_QUEUE.put(self.table)
                 i = len(data)
                 self.table = ""
+
             else :
                 self.table += str(data[i]-1) + ","
+
             i += 1
 
 
