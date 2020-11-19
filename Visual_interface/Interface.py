@@ -115,12 +115,26 @@ if __name__ == '__main__':
     # DEVICE_QUEUE = Queue(maxsize=10)
     # print(id(DEVICE_QUEUE))
     try:
-        pygame_task = loop.run_in_executor(None,main)
+        # pygame_task = loop.run_in_executor(None,main)
         # for i in range(len(address)):
-        #     DEVICE.append(asyncio.ensure_future(BLE_interface.main(loop, address[i], DEVICE_QUEUE[i])))
-        loop.create_task(clock())
-        loop.create_task(BLE_interface.main(loop, address[0], DEVICE_QUEUE[0]))
+            # DEVICE.append(asyncio.ensure_future(BLE_interface.main(loop, address[i], DEVICE_QUEUE[i])))
+
+        # tasks = asyncio.gather(*(BLE_interface.main(loop, address[i], DEVICE_QUEUE[i]) for i in range(len(address))))
+        # loop.run_until_complete(tasks)
+
+        for i in range(len(address)):
+            DEVICE.append(BLE_interface.Device(loop, address[i], DEVICE_QUEUE[i]))
+            print ("device created : {}".format(address[i]))
+
+        loop.create_task(DEVICE[0].Connect())
+        loop.create_task(DEVICE[1].Connect())
+
+        # loop.create_task(clock())
+        # loop.create_task(BLE_interface.main(loop, address[0], DEVICE_QUEUE[0]))
         # loop.create_task(BLE_interface.main(loop, address[1], DEVICE_QUEUE[1]))
+
+        # loop.create_task(BLE_interface.main(loop, address, DEVICE_QUEUE))
+        loop.run_forever()
 
             
     except (KeyboardInterrupt, SystemExit):

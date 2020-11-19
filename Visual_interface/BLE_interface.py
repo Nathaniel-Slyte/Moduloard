@@ -15,13 +15,16 @@ class Device:
 
         self.disconnected_event = asyncio.Event()
         self.loop               = loop
+        # self.loop               = asyncio.new_event_loop()
         # asyncio.set_event_loop(self.loop)
 
 
-    def Connect (self):
+    async def Connect (self):
         try:
-            self.loop.run_until_complete(self.UARTUUID())
-            self.loop.run_until_complete(self.ConnectUART())
+            await self.UARTUUID()
+            await self.ConnectUART()
+            # self.loop.run_until_complete(self.UARTUUID())
+            # self.loop.run_until_complete(self.ConnectUART())
         except (KeyboardInterrupt, SystemExit):
             pass
     
@@ -104,10 +107,26 @@ def GetAddress():
     return BPClist
 
 
-def main(loop ,address, my_queue):
+async def main(loop ,address, my_queue):
+    # device = []
+    # try:
+    #     for i in range(len(address)):
+    #         device.append(Device(loop, address[i], my_queue[i]))
+    #         print ("device created : {}".format(address[i]))
+        
+    #     for i in range(len(device)) :
+    #         device[i].Connect()
+    #         print ("device connected : {}".format(address[i]))
+             
+    # except (KeyboardInterrupt, SystemExit):
+    #     pass
+
+    
     try:
-        device1 = Device(loop, address, my_queue)
-        device1.Connect()
+        device = Device(loop, address, my_queue)
+        print ("device created : {}".format(address))
+        device.Connect()
+        print ("device connected : {}".format(address))
     except (KeyboardInterrupt, SystemExit):
         pass
 
