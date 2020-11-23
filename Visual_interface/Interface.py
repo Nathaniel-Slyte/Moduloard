@@ -16,7 +16,23 @@ SCREEN_WIDTH    = 720
 
 DEVICE_QUEUE    = []
 DEVICE          = []
-PIXELS          = []
+TOUCH_SCREEN    = []
+
+class TouchScreen:
+    def __init__(self, device, position, queue):
+        self.DEVICE         = device
+        self.INPUT_QUEUE    = queue
+        self.position       = position
+
+    def Dequeue(self):
+        try :
+            item = self.INPUT_QUEUE.get(False)
+        except self.INPUT_QUEUE.Empty:
+            return 0
+        else :
+            self.INPUT_QUEUE.task_done()
+            return item
+
 
 def Dequeue(device : int):
     item = DEVICE_QUEUE[device].get()
@@ -30,12 +46,10 @@ def DataParser(data : str):
 
 
 def PixelsInit(screen, device : int):
-    rgb = 0
     table = ""
-    while rgb < (NB_ROW*NB_COLOMN):
+    for i in range(NB_ROW*NB_COLOMN):
         table += str(0) + ","
         PIXELS.append(pygame.Surface((SIZE_PIXEL,SIZE_PIXEL)))
-        rgb+=1
     DEVICE_QUEUE[device].put(table)
     data_table = DataParser(table)
     SetPixels(screen, data_table)
