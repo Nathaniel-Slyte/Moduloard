@@ -1,13 +1,12 @@
 import asyncio
 from bleak import discover, BleakClient
-from queue import Queue
-
-from myqueue import DATA_QUEUE
+import queue
+# from queue import Queue
 
 
 class Device:
-    def __init__(self, loop, address: str, queue_init):
-        self.DATA_QUEUE         = queue_init
+    def __init__(self, loop, address: str):
+        self.DATA_QUEUE         = queue.Queue(maxsize=10)
         self.UUID_NORDIC_TX     = ""
         self.UUID_NORDIC_RX     = ""
         self.table              = ""
@@ -19,18 +18,19 @@ class Device:
         # asyncio.set_event_loop(self.loop)
 
 
+
     async def Connect (self):
         try:
             await self.UARTUUID()
             await self.ConnectUART()
-            # self.loop.run_until_complete(self.UARTUUID())
-            # self.loop.run_until_complete(self.ConnectUART())
         except (KeyboardInterrupt, SystemExit):
             pass
     
+
     def disconnected_callback(self,client):
             print("Disconnected callback called!")
             self.disconnected_event.set()
+
 
     async def UARTUUID(self):
 
@@ -50,6 +50,7 @@ class Device:
                             
                         # print("\t[Characteristic] {0}: (Handle: {1}) ({2}) | Name: {3}, Value: {4} ".format(char.uuid, char.handle, ",".join(char.properties), char.description,))
 
+
     async def ConnectUART(self):
 
         async with BleakClient(self.address, loop=self.loop, disconnected_callback=self.disconnected_callback) as client:
@@ -62,6 +63,7 @@ class Device:
                 await asyncio.sleep(1.0, loop=self.loop)
                 # await client.write_gatt_char(UUID_NORDIC_TX, bytearray(b"0"), True)
     
+
     def UARTDataReceived(self, sender, data):
         i = 0
         while i < len(data) :
@@ -80,6 +82,21 @@ class Device:
 
             i += 1
 
+#### START SCREEN FUNCTIONS ####
+
+    def Dequeue(self):
+        print("Je fonctionne à 60 FPS avec l'addresse {}".format(self.address))
+        try :
+            item = self.DATA_QUEUE.get(block = False)
+        except queue.Empty:
+            return "0"
+        else :
+            self.DATA_QUEUE.task_done()
+            return item
+    
+
+
+################################# END CLASS DEVICE #################################
 
 async def Snif(address_list):
     devices = await discover(timeout= 1.0)
@@ -108,20 +125,7 @@ def GetAddress():
 
 
 async def main(loop ,address, my_queue):
-    # device = []
-    # try:
-    #     for i in range(len(address)):
-    #         device.append(Device(loop, address[i], my_queue[i]))
-    #         print ("device created : {}".format(address[i]))
-        
-    #     for i in range(len(device)) :
-    #         device[i].Connect()
-    #         print ("device connected : {}".format(address[i]))
-             
-    # except (KeyboardInterrupt, SystemExit):
-    #     pass
 
-    
     try:
         device = Device(loop, address, my_queue)
         print ("device created : {}".format(address))

@@ -14,30 +14,10 @@ SIZE_PIXEL      = 8
 SCREEN_LENGTH   = 1280
 SCREEN_WIDTH    = 720
 
-DEVICE_QUEUE    = []
 DEVICE          = []
-TOUCH_SCREEN    = []
-
-class TouchScreen:
-    def __init__(self, device, position, queue):
-        self.DEVICE         = device
-        self.INPUT_QUEUE    = queue
-        self.position       = position
-
-    def Dequeue(self):
-        try :
-            item = self.INPUT_QUEUE.get(False)
-        except self.INPUT_QUEUE.Empty:
-            return 0
-        else :
-            self.INPUT_QUEUE.task_done()
-            return item
+PIXELS          = []
 
 
-def Dequeue(device : int):
-    item = DEVICE_QUEUE[device].get()
-    # DEVICE_QUEUE.task_done()
-    return item
 
 def DataParser(data : str):
     data = data.split(",")
@@ -50,7 +30,6 @@ def PixelsInit(screen, device : int):
     for i in range(NB_ROW*NB_COLOMN):
         table += str(0) + ","
         PIXELS.append(pygame.Surface((SIZE_PIXEL,SIZE_PIXEL)))
-    DEVICE_QUEUE[device].put(table)
     data_table = DataParser(table)
     SetPixels(screen, data_table)
 
@@ -72,13 +51,14 @@ def SetPixels(screen, data_table):
     print ("Pixels set !")
 
 def UpdatePixels(screen, device :int):
-    raw_table = Dequeue(device)
-    # if not raw_table:
-    #     return False
-    data_table = DataParser(raw_table)
-    SetPixels(screen, data_table)
-    
-    return True
+    raw_table = DEVICE[device].Dequeue()
+    if raw_table == "0":
+        return False
+    else :
+        print(raw_table)
+        data_table = DataParser(raw_table)
+        SetPixels(screen, data_table)
+        return True
 
 
 
@@ -97,7 +77,6 @@ def main():
     # define a variable to control the main loop
     running = True
     PixelsInit(my_screen, 0)
-    
     print("Entered Main Pygame")
 
     # main loop
@@ -105,6 +84,8 @@ def main():
         state = UpdatePixels(my_screen, 0)
         # if state == True :
         pygame.display.update() # Update values on screen
+
+
         # event handling, gets all event from the event queue
         for event in pygame.event.get():
             # only do something if the event is of type QUIT
@@ -123,20 +104,16 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     address = BLE_interface.GetAddress()
 
-    for i in address:
-        DEVICE_QUEUE.append(Queue(maxsize=10))
-
     try:
+
+        for i in range(len(address)):
+            DEVICE.append(BLE_interface.Device(loop, address[i]))
+            print ("device created : {}".format(address[i]))
+
         pygame_task = loop.run_in_executor(None,main)
 
         for i in range(len(address)):
-            DEVICE.append(BLE_interface.Device(loop, address[i], DEVICE_QUEUE[i]))
-            print ("device created : {}".format(address[i]))
-
-        for i in range(len(address)):
             loop.create_task(DEVICE[i].Connect())
-        # loop.create_task(DEVICE[0].Connect())
-        # loop.create_task(DEVICE[1].Connect())
 
         loop.run_forever()
             
