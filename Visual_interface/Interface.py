@@ -16,7 +16,8 @@ SCREEN_LENGTH   = 1280
 SCREEN_WIDTH    = 720
 
 DEVICE          = []
-PIXELS          = []
+
+global running = True
 
 # try:
 #     DEVICE[device].PixelsSet(pixels)
@@ -37,7 +38,7 @@ def SetPixels(screen, data_table, X, Y):
     while posY < NB_ROW + Y:
         while posX < NB_COLOMN + X:
 
-            pos = (posY-Y) * NB_COLOMN + (posX-X)                                       # Position in the X Y matrix
+            pos = (posY-Y) * NB_COLOMN + (posX-X)                               # Position in the X Y matrix
             rgb = int(data_table[pos])                                          # RGB value for pixel
             pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
             screen.blit(pixel, (posX * SIZE_PIXEL, posY * SIZE_PIXEL))          # update color of the pixel
@@ -55,7 +56,7 @@ def UpdatePixels(screen, device :int):
         print(raw_table)
         data_table = DataParser(raw_table)
         SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y)
-        SendMessage("data received !", device)
+        # SendMessage("Message received !", device)
         return True
 
 def SendMessage(message: str, device: int):
@@ -73,10 +74,6 @@ def main():
 
     # Initiate the pygame screen
     my_screen = pygame.display.set_mode((SCREEN_LENGTH , SCREEN_WIDTH))
-    
-    # define a variable to control the main loop
-    running = True
-
 
     # main loop
     while running:

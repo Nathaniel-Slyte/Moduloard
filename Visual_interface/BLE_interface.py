@@ -80,10 +80,12 @@ class Device:
 
             if int(data[i]) == 0:
                 print("my addresse : {}".format(self.address))
-                # print(self.table)
-                # print("LA BAS", id(DATA_QUEUE))
                 if len(self.table.split(',')) >= 21*12-1:
-                    self.DATA_QUEUE.put(self.table)
+                    try:
+                        self.DATA_QUEUE.put(self.table, block = False)
+                    except queue.Full:
+                        self.Dequeue()
+                        self.DATA_QUEUE.put(self.table, block = False)
                 i = len(data)
                 self.table = ""
 
