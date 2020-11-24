@@ -9,6 +9,8 @@ class Device:
         self.DATA_QUEUE         = queue.Queue(maxsize=10)
         self.UUID_NORDIC_TX     = ""
         self.UUID_NORDIC_RX     = ""
+        self.X                  = 0
+        self.Y                  = 0
         self.table              = ""
         self.address            = address
 
@@ -94,6 +96,9 @@ class Device:
             self.DATA_QUEUE.task_done()
             return item
     
+    def UpdatePos(self, X, Y):
+        self.X = X
+        self.Y = Y
 
 
 ################################# END CLASS DEVICE #################################

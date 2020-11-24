@@ -29,18 +29,18 @@ def DataParser(data : str):
     data.pop()
     return data
 
-def SetPixels(screen, data_table):
-    posX  = 0
-    posY  = 0
+def SetPixels(screen, data_table, X, Y):
+    print("X: {} Y: {}".format(X,Y))
+    posX  = X
+    posY  = Y
     pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
-    while posY < NB_ROW:
-        while posX < NB_COLOMN:
+    while posY < NB_ROW + Y:
+        while posX < NB_COLOMN + X:
 
-            pos = posY * NB_COLOMN + posX                                       # Position in the X Y matrix
+            pos = (posY-Y) * NB_COLOMN + (posX-X)                                       # Position in the X Y matrix
             rgb = int(data_table[pos])                                          # RGB value for pixel
             pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
             screen.blit(pixel, (posX * SIZE_PIXEL, posY * SIZE_PIXEL))          # update color of the pixel
-
 
             posX+=1
         posY+=1
@@ -54,7 +54,7 @@ def UpdatePixels(screen, device :int):
     else :
         print(raw_table)
         data_table = DataParser(raw_table)
-        SetPixels(screen, data_table)
+        SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y)
         return True
 
 
