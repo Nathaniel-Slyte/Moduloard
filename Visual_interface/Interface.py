@@ -55,9 +55,12 @@ def UpdatePixels(screen, device :int):
         print(raw_table)
         data_table = DataParser(raw_table)
         SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y)
+        SendMessage("data received !", device)
         return True
 
-
+def SendMessage(message: str, device: int):
+    message = message.encode('utf-8')
+    DEVICE[device].AddMessageQueue(message)
 
 
 

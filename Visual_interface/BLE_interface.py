@@ -7,6 +7,7 @@ import queue
 class Device:
     def __init__(self, loop, address: str):
         self.DATA_QUEUE         = queue.Queue(maxsize=10)
+        self.MESSAGE_QUEUE      = queue.Queue(maxsize=10)
         self.UUID_NORDIC_TX     = ""
         self.UUID_NORDIC_RX     = ""
         self.X                  = 0
@@ -63,7 +64,14 @@ class Device:
             print("Notify enable")
             while True :
                 await asyncio.sleep(1.0, loop=self.loop)
-                # await client.write_gatt_char(UUID_NORDIC_TX, bytearray(b"0"), True)
+                # await client.write_gatt_char(self.UUID_NORDIC_TX, bytearray(b"MUCA!"), True)
+                try :
+                    item = self.MESSAGE_QUEUE.get(block = False)
+                except queue.Empty:
+                    pass
+                else :
+                    self.MESSAGE_QUEUE.task_done()
+                    await client.write_gatt_char(self.UUID_NORDIC_TX, bytearray(item), True)
     
 
     def UARTDataReceived(self, sender, data):
@@ -99,6 +107,9 @@ class Device:
     def UpdatePos(self, X, Y):
         self.X = X
         self.Y = Y
+
+    def AddMessageQueue(self, message):
+        self.MESSAGE_QUEUE.put(message)
 
 
 ################################# END CLASS DEVICE #################################
