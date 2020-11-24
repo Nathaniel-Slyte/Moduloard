@@ -17,8 +17,6 @@ SCREEN_WIDTH    = 720
 
 DEVICE          = []
 
-global running = True
-
 # try:
 #     DEVICE[device].PixelsSet(pixels)
 # except: # catch *all* exceptions
@@ -63,7 +61,9 @@ def SendMessage(message: str, device: int):
     message = message.encode('utf-8')
     DEVICE[device].AddMessageQueue(message)
 
-
+def StopAllDevices():
+    for i in range(len(DEVICE)):
+        DEVICE[i].StopDevice()
 
 def main():
 
@@ -74,6 +74,8 @@ def main():
 
     # Initiate the pygame screen
     my_screen = pygame.display.set_mode((SCREEN_LENGTH , SCREEN_WIDTH))
+
+    running = True
 
     # main loop
     while running:
@@ -89,6 +91,8 @@ def main():
             if event.type == pygame.QUIT:
                 # change the value to False, to exit the main loop
                 running = False
+
+                StopAllDevices()
                 pygame.quit()
                 sys.exit()
                 

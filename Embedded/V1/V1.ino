@@ -25,7 +25,8 @@ short currentCalibrationStep = 0;
 unsigned int calibrationGrid[NUM_ROWS * NUM_COLUMNS];
 
 
-String ID = "BPC";
+String ID       = "BPC";
+String message  = "";
 
 void setup() {
 
@@ -129,22 +130,6 @@ void ButcherByte(uint8_t rawByteValues[]){
   }
 }
 
-
-
-void SendRawByte() {
-  // The array is composed of 252 bytes. Already calibrated
-  // HIGH byte minimum | LOW byte minimum  | value 1
-
-  unsigned int minimum = 80000;
-  uint8_t rawByteValues[252];
-
-  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
-  if (muca.grid[i] > 0) rawByteValues[i + 2] = muca.grid[i] - minimum;
-  }
-
-  ButcherByte(rawByteValues);
-}
-
 void GetRaw() {
   if (muca.updated()) {
     uint8_t rawByteValues[252];
@@ -192,8 +177,26 @@ void loop() {
     //SendRawByte(); // Faster
     //SendRawString();  
   //}
-  //SendFalseRawByte();
-  GetRaw();
+  
+  while ( bleuart.available() )
+  {
+    uint8_t ch;
+    ch = (uint8_t) bleuart.read();
+    //Serial.write(ch);
+    message += (char) ch;
+  }
+  
+  if (message != "")
+  {
+    Serial.println(message);
+    message = "";
+  }
+  else
+  {
+    SendFalseRawByte();  
+  }
+  
+
   delay(16); // waiting 16ms for 60fps
 
 }

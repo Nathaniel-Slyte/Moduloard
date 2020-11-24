@@ -14,6 +14,7 @@ class Device:
         self.Y                  = 0
         self.table              = ""
         self.address            = address
+        self.active             = True
 
         self.disconnected_event = asyncio.Event()
         self.loop               = loop
@@ -62,7 +63,7 @@ class Device:
 
             await client.start_notify(self.UUID_NORDIC_RX, self.UARTDataReceived)
             print("Notify enable")
-            while True :
+            while self.active :
                 await asyncio.sleep(1.0, loop=self.loop)
                 # await client.write_gatt_char(self.UUID_NORDIC_TX, bytearray(b"MUCA!"), True)
                 try :
@@ -111,7 +112,10 @@ class Device:
         self.Y = Y
 
     def AddMessageQueue(self, message):
-        self.MESSAGE_QUEUE.put(message)
+        self.MESSAGE_QUEUE.put(message, block = False)
+
+    def StopDevice(self):
+        self.active = False
 
 
 ################################# END CLASS DEVICE #################################
