@@ -85,7 +85,7 @@ class Device:
 #### START SCREEN FUNCTIONS ####
 
     def Dequeue(self):
-        print("Je fonctionne à 60 FPS avec l'addresse {}".format(self.address))
+        # print("Je fonctionne à 60 FPS avec l'addresse {}".format(self.address))
         try :
             item = self.DATA_QUEUE.get(block = False)
         except queue.Empty:

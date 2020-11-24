@@ -1,6 +1,7 @@
 import pygame 
 import BLE_interface
 import asyncio
+import sys
 
 from pygame.locals import *
 from queue import Queue
@@ -17,34 +18,30 @@ SCREEN_WIDTH    = 720
 DEVICE          = []
 PIXELS          = []
 
-
+# try:
+#     DEVICE[device].PixelsSet(pixels)
+# except: # catch *all* exceptions
+#     e = sys.exc_info()[0]
+#     print("Error: {}".format(e) )
 
 def DataParser(data : str):
     data = data.split(",")
     data.pop()
     return data
 
-
-def PixelsInit(screen, device : int):
-    table = ""
-    for i in range(NB_ROW*NB_COLOMN):
-        table += str(0) + ","
-        PIXELS.append(pygame.Surface((SIZE_PIXEL,SIZE_PIXEL)))
-    data_table = DataParser(table)
-    SetPixels(screen, data_table)
-
-
 def SetPixels(screen, data_table):
-    posX = 0
-    posY = 0
+    posX  = 0
+    posY  = 0
+    pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
     while posY < NB_ROW:
         while posX < NB_COLOMN:
 
             pos = posY * NB_COLOMN + posX                                       # Position in the X Y matrix
             rgb = int(data_table[pos])                                          # RGB value for pixel
-            PIXELS[pos].fill((rgb, rgb, rgb))                                   # set color of the pixel (3x rgb because grey) 
-            screen.blit(PIXELS[pos], (posX * SIZE_PIXEL, posY * SIZE_PIXEL))    # update color of the pixel
-            
+            pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
+            screen.blit(pixel, (posX * SIZE_PIXEL, posY * SIZE_PIXEL))          # update color of the pixel
+
+
             posX+=1
         posY+=1
         posX =0
@@ -76,15 +73,15 @@ def main():
     
     # define a variable to control the main loop
     running = True
-    PixelsInit(my_screen, 0)
-    print("Entered Main Pygame")
+
 
     # main loop
     while running:
-        state = UpdatePixels(my_screen, 0)
-        # if state == True :
-        pygame.display.update() # Update values on screen
-
+        try:
+            state = UpdatePixels(my_screen, 0)
+            pygame.display.update() # Update values on screen
+        except:
+            print("Can not update !")
 
         # event handling, gets all event from the event queue
         for event in pygame.event.get():
