@@ -3,6 +3,7 @@ from bleak import discover, BleakClient
 import queue
 # from queue import Queue
 
+SNIF_LOOP = 3
 
 class Device:
     def __init__(self, loop, address: str):
@@ -57,7 +58,7 @@ class Device:
 
     async def ConnectUART(self):
 
-        async with BleakClient(self.address, loop=self.loop, disconnected_callback=self.disconnected_callback) as client:
+        async with BleakClient(self.address, disconnected_callback=self.disconnected_callback) as client:
             x = await client.is_connected()
             print("Connected: {0}".format(x))
 
@@ -98,7 +99,6 @@ class Device:
 #### START SCREEN FUNCTIONS ####
 
     def Dequeue(self):
-        # print("Je fonctionne à 60 FPS avec l'addresse {}".format(self.address))
         try :
             item = self.DATA_QUEUE.get(block = False)
         except queue.Empty:
@@ -134,37 +134,35 @@ def GetAddress():
 
     BPClist = []
 
-    i = 0
-    while i < 5 :
+    for i in range(SNIF_LOOP):
             loop.run_until_complete(Snif(BPClist))
-            i += 1
-    i = 0
+
     BPClist = list(set(BPClist))
-    while i < len(BPClist):
+    for i in range(len(BPClist)):
         print("Found BPC, address : {}".format(BPClist[i]))
-        i +=1
+        
     return BPClist
 
 
-async def main(loop ,address, my_queue):
+# async def main(loop ,address, my_queue):
 
-    try:
-        device = Device(loop, address, my_queue)
-        print ("device created : {}".format(address))
-        device.Connect()
-        print ("device connected : {}".format(address))
-    except (KeyboardInterrupt, SystemExit):
-        pass
+#     try:
+#         device = Device(loop, address, my_queue)
+#         print ("device created : {}".format(address))
+#         device.Connect()
+#         print ("device connected : {}".format(address))
+#     except (KeyboardInterrupt, SystemExit):
+#         pass
 
 
 
-if __name__ == '__main__':
-    # Main()
-    address = GetAddress()
-    try:
-        print("Create a class")
-        # device1 = Device(address[0])
-        print("start Connection")
-        # device1.Connect()
-    except (KeyboardInterrupt, SystemExit):
-        pass
+# if __name__ == '__main__':
+#     # Main()
+#     address = GetAddress()
+#     try:
+#         print("Create a class")
+#         # device1 = Device(address[0])
+#         print("start Connection")
+#         # device1.Connect()
+#     except (KeyboardInterrupt, SystemExit):
+#         pass

@@ -11,7 +11,7 @@ FPS = 30
 
 NB_ROW          = 21
 NB_COLOMN       = 12
-SIZE_PIXEL      = 8
+SIZE_PIXEL      = 16
 SCREEN_LENGTH   = 1280
 SCREEN_WIDTH    = 720
 
@@ -30,20 +30,16 @@ def DataParser(data : str):
 
 def SetPixels(screen, data_table, X, Y):
     print("X: {} Y: {}".format(X,Y))
-    posX  = X
-    posY  = Y
     pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
-    while posY < NB_ROW + Y:
-        while posX < NB_COLOMN + X:
+    
+    for y in range(NB_ROW):
+        for x in range(NB_COLOMN):
 
-            pos = (posY-Y) * NB_COLOMN + (posX-X)                               # Position in the X Y matrix
+            pos = y * NB_COLOMN + x                               # Position in the X Y matrix
             rgb = int(data_table[pos])                                          # RGB value for pixel
             pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
-            screen.blit(pixel, (posX * SIZE_PIXEL, posY * SIZE_PIXEL))          # update color of the pixel
+            screen.blit(pixel, (X + x * SIZE_PIXEL, Y + y * SIZE_PIXEL))          # update color of the pixel
 
-            posX+=1
-        posY+=1
-        posX =0
     print ("Pixels set !")
 
 def UpdatePixels(screen, device :int):
@@ -51,7 +47,7 @@ def UpdatePixels(screen, device :int):
     if raw_table == "0":
         return False
     else :
-        print(raw_table)
+        # print(raw_table)
         data_table = DataParser(raw_table)
         SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y)
         # SendMessage("Message received !", device)
@@ -65,6 +61,11 @@ def StopAllDevices():
     for i in range(len(DEVICE)):
         DEVICE[i].StopDevice()
 
+def DetectPos():
+    print("Start to update positions !")
+    DEVICE[0].UpdatePos(150 , 150  )
+    DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
+
 def main():
 
     # Initialize pygame module
@@ -76,13 +77,17 @@ def main():
     my_screen = pygame.display.set_mode((SCREEN_LENGTH , SCREEN_WIDTH))
 
     running = True
+    DetectPos()
 
     # main loop
     while running:
         try:
-            state = UpdatePixels(my_screen, 0)
+            for i in range(len(DEVICE)):  
+                state = UpdatePixels(my_screen, i)
             pygame.display.update() # Update values on screen
         except:
+            e = sys.exc_info()[0]
+            print("Error: {}".format(e) )
             print("Can not update !")
 
         # event handling, gets all event from the event queue
@@ -119,6 +124,10 @@ if __name__ == '__main__':
         loop.run_forever()
             
     except (KeyboardInterrupt, SystemExit):
+        try:
+            StopAllDevices()
+        except:
+            pass
         loop.stop()
         # pass
 
