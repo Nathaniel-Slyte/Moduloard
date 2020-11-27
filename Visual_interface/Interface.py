@@ -7,15 +7,22 @@ from pygame.locals import *
 from queue import Queue
 from datetime import datetime
 
+pygame.init()
+
 FPS = 30
 
 NB_ROW          = 21
 NB_COLOMN       = 12
 SIZE_PIXEL      = 16
-SCREEN_LENGTH   = 1280
-SCREEN_WIDTH    = 720
+SCREEN_WIDTH   = 1280
+SCREEN_HEIGHT    = 720
 
 DEVICE          = []
+
+GREY            = (120,120,120)
+GREY_LIGHT      = (170,170,170)  
+GREY_DARK       = (80,80,80) 
+
 
 # try:
 #     DEVICE[device].PixelsSet(pixels)
@@ -64,34 +71,45 @@ def StopAllDevices():
 def DetectPos():
     print("Start to update positions !")
     DEVICE[0].UpdatePos(150 , 150  )
-    DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
+    # DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
+
+def InterfaceInit(screen):
+    pygame.draw.rect(screen,GREY,(SCREEN_WIDTH-300, 0, 300, SCREEN_HEIGHT))
+    
+
 
 def main():
 
-    # Initialize pygame module
-    pygame.init()
-    
+    # Initialize pygame data
     FramePerSec = pygame.time.Clock()
+    pygame.display.set_caption("Moduloard Interface")
 
     # Initiate the pygame screen
-    my_screen = pygame.display.set_mode((SCREEN_LENGTH , SCREEN_WIDTH))
+    SCREEN = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))
 
     running = True
     DetectPos()
 
+    # set interface
+    InterfaceInit(SCREEN)
+
+
+    smallfont = pygame.font.SysFont('Corbel',35) 
+    text = smallfont.render('Message !' , True , (255,255,255)) 
+
     # main loop
     while running:
-        try:
-            for i in range(len(DEVICE)):  
-                state = UpdatePixels(my_screen, i)
-            pygame.display.update() # Update values on screen
-        except:
-            e = sys.exc_info()[0]
-            print("Error: {}".format(e) )
-            print("Can not update !")
+
+        mouse = pygame.mouse.get_pos()
 
         # event handling, gets all event from the event queue
         for event in pygame.event.get():
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
+                    SendMessage("Button cliked !", 0)
+                    pass
+
             # only do something if the event is of type QUIT
             if event.type == pygame.QUIT:
                 # change the value to False, to exit the main loop
@@ -100,7 +118,25 @@ def main():
                 StopAllDevices()
                 pygame.quit()
                 sys.exit()
-                
+
+        # Button management        
+        if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-200,100,140,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-200,100,140,60]) 
+
+        SCREEN.blit(text , (SCREEN_WIDTH-190,120)) 
+
+        # Touch interface management
+        try:
+            for i in range(len(DEVICE)):  
+                state = UpdatePixels(SCREEN, i)
+            pygame.display.update() # Update values on screen
+        except:
+            e = sys.exc_info()[0]
+            print("Error: {}".format(e) )
+            print("Can not update !")
+
         FramePerSec.tick(FPS)
      
 
