@@ -25,13 +25,15 @@ short currentCalibrationStep = 0;
 unsigned int calibrationGrid[NUM_ROWS * NUM_COLUMNS];
 
 
-String ID       = "BPC";
-String message  = "";
+String ID           = "BPC";
+String message      = "";
 
-int south = 7;
-int east  = 14;
-int west  = 17;
-int north = 24;
+int south           = 7;
+int east            = 14;
+int west            = 17;
+int north           = 24;
+
+bool notifyEnabling = false;
 
 uint8_t cardinalMessage[] = {1, 5};
 
@@ -118,23 +120,23 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
 
 
 
-void ButcherByte(uint8_t rawByteValues[]){
+void ButcherByte(uint8_t rawByteValues[], int lengthMessage){
   
   uint8_t token[20];
   uint16_t counter = 0;
   
-  for (int i = 0; i < NUM_ROWS * NUM_COLUMNS ; i++) {
+  for (int i = 0; i < lengthMessage ; i++) {
     token[counter] = rawByteValues[i];
     //Serial.println(token[counter]);
     counter++;
     
-    if (counter == 20 || i == NUM_ROWS * NUM_COLUMNS -1){
-      if (counter != 20 && i == NUM_ROWS * NUM_COLUMNS -1){
+    if (counter == 20 || i == lengthMessage -1){
+      if (counter != 20 && i == lengthMessage -1){
         token[counter] = (0x00<<8);
       }
       bleuart.write(token, 20);
       
-      if (counter == 20 && i == NUM_ROWS * NUM_COLUMNS -1){
+      if (counter == 20 && i == lengthMessage -1){
         delay(20);
         bleuart.write((0x00<<8), 1);
       }
@@ -156,7 +158,7 @@ void GetRaw() {
         Serial.print(",");
       }
       Serial.println();
-      ButcherByte(rawByteValues);
+      ButcherByte(rawByteValues, NUM_ROWS * NUM_COLUMNS);
     }
     else { // Once the calibration is done
       //Save the grid value to the calibration array
@@ -181,19 +183,90 @@ void SendFalseRawByte() {
     rawByteValues[i] = byte(i+2) ; // i The +30 is to be sure it's positive
   }
   
-  ButcherByte(rawByteValues);
+  ButcherByte(rawByteValues, NUM_ROWS * NUM_COLUMNS);
 
 }
 
-void loop() {
-  
+String CheckMessageReceived(){
+  String messageReceived = "";
   while ( bleuart.available() )
   {
     uint8_t ch;
     ch = (uint8_t) bleuart.read();
     //Serial.write(ch);
-    message += (char) ch;
+    messageReceived += (char) ch;
   }
+  return messageReceived;
+}
+
+void CheckCardinalPosition(){
+  
+    if(digitalRead(south) == HIGH){
+      cardinalMessage[1] = byte(0);
+      ButcherByte(cardinalMessage, 2);
+      Serial.println("South !");
+      delay(30);
+    }
+    else if(digitalRead(east) == HIGH){
+      cardinalMessage[1] = byte(1);
+      ButcherByte(cardinalMessage, 2);
+      Serial.println("East !");
+      //delay(30);
+    }
+    /*
+    else if(digitalRead(north) == HIGH){
+      cardinalMessage[1] = 0x02<<8;
+      ButcherByte(cardinalMessage, 2);
+      Serial.println("North !");
+      delay(30);
+    }
+    else if(digitalRead(west) == HIGH){
+      cardinalMessage[1] = 0x03<<8;
+      ButcherByte(cardinalMessage, 2);
+      Serial.println("West !");
+      delay(30);
+    }
+*/
+}
+
+void CheckCardinalDemand (String demand){
+  if (demand == "South"){
+    pinMode(south, OUTPUT);
+    digitalWrite(south, HIGH);
+    delay(10);
+    pinMode(south, INPUT);
+  }
+
+  if (demand == "East"){
+    pinMode(east, OUTPUT);
+    digitalWrite(east, HIGH);
+    delay(50);
+    pinMode(east, INPUT);
+  }
+
+  if (demand == "North"){
+    pinMode(north, OUTPUT);
+    digitalWrite(north, HIGH);
+    delay(50);
+    pinMode(north, INPUT);
+  }
+
+  if (demand == "West"){
+    pinMode(west, OUTPUT);
+    digitalWrite(west, HIGH);
+    delay(50);
+    pinMode(west, INPUT);
+  }
+}
+
+void loop() {
+
+  while (!notifyEnabling) { 
+    CheckCardinalDemand(CheckMessageReceived());
+    CheckCardinalPosition();
+  }
+  
+  message = CheckMessageReceived();
   
   if (message != "")
   {
@@ -202,40 +275,10 @@ void loop() {
   }
   else
   {
-    
-    if(digitalRead(south) == HIGH){
-      cardinalMessage[1] = byte(0);
-      ButcherByte(cardinalMessage);
-      Serial.println("South !");
-      delay(30);
-    }
-    else if(digitalRead(east) == HIGH){
-      cardinalMessage[1] = byte(1);
-      ButcherByte(cardinalMessage);
-      Serial.println("East !");
-      delay(30);
-    }
-    /*
-    else if(digitalRead(north) == HIGH){
-      cardinalMessage[1] = 0x02<<8;
-      ButcherByte(cardinalMessage);
-      Serial.println("North !");
-      delay(30);
-    }
-    else if(digitalRead(west) == HIGH){
-      cardinalMessage[1] = 0x03<<8;
-      ButcherByte(cardinalMessage);
-      Serial.println("West !");
-      delay(30);
-    }
-*/
-    
-    else{
-      //if (muca.updated()) {
-        //GetRaw();
-      //}
-      SendFalseRawByte();
-    }
+    //if (muca.updated()) {
+      //GetRaw();
+    //}
+    SendFalseRawByte();
 
     
   }

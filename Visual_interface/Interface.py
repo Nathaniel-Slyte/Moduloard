@@ -118,6 +118,7 @@ def main():
                     try:
                         for i in range(len(DEVICE)):
                             SendMessage("New Calibration !", i)
+                            SendMessage("South", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
                     except:
                         pass
 

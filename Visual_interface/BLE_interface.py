@@ -77,9 +77,10 @@ class Device:
     
 
     def UARTDataReceived(self, sender, data):
-        
+
         if int(data[0]) == 1:
             print("Received cardinal indication : {}".format(int(data[1])))
+            
         
         else:        
             for i in range(len(data)) :
