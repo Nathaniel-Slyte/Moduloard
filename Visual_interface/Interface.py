@@ -22,6 +22,7 @@ DEVICE          = []
 GREY            = (120,120,120)
 GREY_LIGHT      = (170,170,170)  
 GREY_DARK       = (80,80,80) 
+WHITE           = (255,255,255)
 
 
 # try:
@@ -44,6 +45,9 @@ def SetPixels(screen, data_table, X, Y):
 
             pos = y * NB_COLOMN + x                               # Position in the X Y matrix
             rgb = int(data_table[pos])                                          # RGB value for pixel
+            
+            if rgb >255:
+                rgb = 255
             pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
             screen.blit(pixel, (X + x * SIZE_PIXEL, Y + y * SIZE_PIXEL))          # update color of the pixel
 
@@ -71,7 +75,7 @@ def StopAllDevices():
 def DetectPos():
     print("Start to update positions !")
     DEVICE[0].UpdatePos(150 , 150  )
-    # DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
+    DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
 
 def InterfaceInit(screen):
     pygame.draw.rect(screen,GREY,(SCREEN_WIDTH-300, 0, 300, SCREEN_HEIGHT))
@@ -88,14 +92,18 @@ def main():
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))
 
     running = True
-    DetectPos()
+    try:
+        DetectPos()
+    except:
+        pass
 
     # set interface
     InterfaceInit(SCREEN)
 
 
     smallfont = pygame.font.SysFont('Corbel',35) 
-    text = smallfont.render('Message !' , True , (255,255,255)) 
+    text_calib = smallfont.render('Calibration' , True , WHITE) 
+    text_gain = smallfont.render('Set gain' , True , WHITE) 
 
     # main loop
     while running:
@@ -106,9 +114,19 @@ def main():
         for event in pygame.event.get():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
-                    SendMessage("Button cliked !", 0)
-                    pass
+                if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
+                    try:
+                        for i in range(len(DEVICE)):
+                            SendMessage("New Calibration !", i)
+                    except:
+                        pass
+
+                if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 180 <= mouse[1] <= 240:
+                    try:
+                        for i in range(len(DEVICE)):
+                            SendMessage("SET random gain !", i)
+                    except:
+                        pass
 
             # only do something if the event is of type QUIT
             if event.type == pygame.QUIT:
@@ -119,13 +137,19 @@ def main():
                 pygame.quit()
                 sys.exit()
 
-        # Button management        
-        if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160: 
-            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-200,100,140,60]) 
+        # Button management Calibration        
+        if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-220,100,160,60]) 
         else: 
-            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-200,100,140,60]) 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-220,100,160,60]) 
+        SCREEN.blit(text_calib , (SCREEN_WIDTH-210,120)) 
 
-        SCREEN.blit(text , (SCREEN_WIDTH-190,120)) 
+        # Button management Gain       
+        if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 180 <= mouse[1] <= 240: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-220,180,160,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-220,180,160,60]) 
+        SCREEN.blit(text_gain , (SCREEN_WIDTH-210,200)) 
 
         # Touch interface management
         try:

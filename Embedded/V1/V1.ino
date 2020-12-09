@@ -28,9 +28,23 @@ unsigned int calibrationGrid[NUM_ROWS * NUM_COLUMNS];
 String ID       = "BPC";
 String message  = "";
 
+int south = 7;
+int east  = 14;
+int west  = 17;
+int north = 24;
+
+uint8_t cardinalMessage[] = {1, 5};
+
 void setup() {
 
   Serial.begin(115200);
+
+  pinMode(11, OUTPUT);
+  
+  pinMode(south, INPUT);
+  pinMode(east, INPUT);
+  //pinMode(west, INPUT);
+  //pinMode(north, INPUT);
   
   Bluefruit.begin();
   Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
@@ -110,21 +124,21 @@ void ButcherByte(uint8_t rawByteValues[]){
   uint16_t counter = 0;
   
   for (int i = 0; i < NUM_ROWS * NUM_COLUMNS ; i++) {
-    token[counter] = rawByteValues[i]+1;
+    token[counter] = rawByteValues[i];
     //Serial.println(token[counter]);
     counter++;
     
     if (counter == 20 || i == NUM_ROWS * NUM_COLUMNS -1){
       if (counter != 20 && i == NUM_ROWS * NUM_COLUMNS -1){
         token[counter] = (0x00<<8);
-        //Serial.println("0 - 0");
       }
       bleuart.write(token, 20);
       
       if (counter == 20 && i == NUM_ROWS * NUM_COLUMNS -1){
+        delay(20);
         bleuart.write((0x00<<8), 1);
-        //Serial.println("0 - 1");
       }
+      
       counter = 0;
     }  
   }
@@ -164,7 +178,7 @@ void SendFalseRawByte() {
   // Print the array value
   uint8_t rawByteValues[252];
   for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
-    rawByteValues[i] = byte(i); // i The +30 is to be sure it's positive
+    rawByteValues[i] = byte(i+2) ; // i The +30 is to be sure it's positive
   }
   
   ButcherByte(rawByteValues);
@@ -193,10 +207,20 @@ void loop() {
   }
   else
   {
-    SendFalseRawByte();  
+    //if (muca.updated()) {
+      //GetRaw();
+    //}
+    if(digitalRead(south)==HIGH){
+      cardinalMessage[1] = 0x00<<8;
+      ButcherByte(cardinalMessage);
+      Serial.println("South !");
+      delay(30);
+    }
+    else{
+      SendFalseRawByte();
+    }
   }
-  
-
   delay(16); // waiting 16ms for 60fps
+
 
 }

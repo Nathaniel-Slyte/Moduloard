@@ -77,24 +77,27 @@ class Device:
     
 
     def UARTDataReceived(self, sender, data):
-        i = 0
-        while i < len(data) :
+        
+        if int(data[0]) == 1:
+            print("Received cardinal indication : {}".format(int(data[1])))
+        
+        else:        
+            for i in range(len(data)) :
 
-            if int(data[i]) == 0:
-                print("my addresse : {}".format(self.address))
-                if len(self.table.split(',')) >= 21*12-1:
-                    try:
-                        self.DATA_QUEUE.put(self.table, block = False)
-                    except queue.Full:
-                        self.Dequeue()
-                        self.DATA_QUEUE.put(self.table, block = False)
-                i = len(data)
-                self.table = ""
+                if int(data[i]) == 0:
+                    print("my addresse : {}".format(self.address))
+                    if len(self.table.split(',')) >= 21*12-1:
+                        try:
+                            self.DATA_QUEUE.put(self.table, block = False)
+                        except queue.Full:
+                            self.Dequeue()
+                            self.DATA_QUEUE.put(self.table, block = False)
+                    print(self.table)
+                    self.table = ""
+                    break
 
-            else :
-                self.table += str(data[i]-1) + ","
-
-            i += 1
+                else :
+                    self.table += str(data[i]) + ","
 
 #### START SCREEN FUNCTIONS ####
 
