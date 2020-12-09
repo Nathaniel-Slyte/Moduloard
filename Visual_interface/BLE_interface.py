@@ -92,7 +92,6 @@ class Device:
                         except queue.Full:
                             self.Dequeue()
                             self.DATA_QUEUE.put(self.table, block = False)
-                    print(self.table)
                     self.table = ""
                     break
 

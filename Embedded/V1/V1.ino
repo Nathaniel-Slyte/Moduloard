@@ -187,11 +187,6 @@ void SendFalseRawByte() {
 
 void loop() {
   
-  //if (muca.updated()) {
-    //SendRawByte(); // Faster
-    //SendRawString();  
-  //}
-  
   while ( bleuart.available() )
   {
     uint8_t ch;
@@ -207,19 +202,44 @@ void loop() {
   }
   else
   {
-    //if (muca.updated()) {
-      //GetRaw();
-    //}
-    if(digitalRead(south)==HIGH){
-      cardinalMessage[1] = 0x00<<8;
+    
+    if(digitalRead(south) == HIGH){
+      cardinalMessage[1] = byte(0);
       ButcherByte(cardinalMessage);
       Serial.println("South !");
       delay(30);
     }
+    else if(digitalRead(east) == HIGH){
+      cardinalMessage[1] = byte(1);
+      ButcherByte(cardinalMessage);
+      Serial.println("East !");
+      delay(30);
+    }
+    /*
+    else if(digitalRead(north) == HIGH){
+      cardinalMessage[1] = 0x02<<8;
+      ButcherByte(cardinalMessage);
+      Serial.println("North !");
+      delay(30);
+    }
+    else if(digitalRead(west) == HIGH){
+      cardinalMessage[1] = 0x03<<8;
+      ButcherByte(cardinalMessage);
+      Serial.println("West !");
+      delay(30);
+    }
+*/
+    
     else{
+      //if (muca.updated()) {
+        //GetRaw();
+      //}
       SendFalseRawByte();
     }
+
+    
   }
+  
   delay(16); // waiting 16ms for 60fps
 
 
