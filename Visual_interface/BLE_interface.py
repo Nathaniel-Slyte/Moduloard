@@ -78,10 +78,11 @@ class Device:
 
     def UARTDataReceived(self, sender, data):
 
-        if int(data[0]) == 1:
-            print("Received cardinal indication : {}".format(int(data[1])))
+        # if int(data[0]) == 1:
+        print("{} Received cardinal indication : {}".format(self.address, int(data[1])))
             
-        
+        if int(data[0]) == 1:
+            pass
         else:        
             for i in range(len(data)) :
 
@@ -126,7 +127,7 @@ class Device:
 async def Snif(address_list):
     devices = await discover(timeout= 1.0)
     for d in devices:
-        #print(d)
+        print(d)
         if (d.name == "BPC"):
             address_list.append(d.address)
 

@@ -38,8 +38,6 @@ bool notifyEnabling = false;
 uint8_t cardinalMessage[] = {1, 5}; // first byte = 1, 1 == cardinal message. Second byte = 0, 1, 2 ,3 each one for a cardinal direction
 
 void setup() {
-
-  pinMode(11, OUTPUT);
   
   pinMode(south, INPUT);
   pinMode(east, INPUT);
@@ -218,37 +216,38 @@ void CheckCardinalPosition(){
 }
 
 void CheckCardinalDemand (String demand){
-  if (demand == "South"){
+  if (demand == "South\n"){
     pinMode(south, OUTPUT);
     digitalWrite(south, HIGH);
     delay(50);
     pinMode(south, INPUT);
   }
 
-  if (demand == "East"){
+  if (demand == "East\n"){
     pinMode(east, OUTPUT);
     digitalWrite(east, HIGH);
     delay(50);
     pinMode(east, INPUT);
   }
 
-  if (demand == "North"){
+  if (demand == "North\n"){
     pinMode(north, OUTPUT);
     digitalWrite(north, HIGH);
     delay(50);
     pinMode(north, INPUT);
   }
 
-  if (demand == "West"){
+  if (demand == "West\n"){
     pinMode(west, OUTPUT);
     digitalWrite(west, HIGH);
     delay(50);
     pinMode(west, INPUT);
   }
 
-  if (demand == "Enabling"){
+  if (demand == "Enabling\n"){
     notifyEnabling = true;
   }
+  delay(40);
 }
 
 void loop() {

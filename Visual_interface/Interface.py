@@ -118,7 +118,8 @@ def main():
                     try:
                         for i in range(len(DEVICE)):
                             # SendMessage("New Calibration !", i)
-                            SendMessage("South", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
+                            SendMessage("East", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
+                            print("message send")
                     except:
                         pass
 
@@ -126,7 +127,7 @@ def main():
                     try:
                         for i in range(len(DEVICE)):
                             # SendMessage("SET random gain !", i)
-                            SendMessage("South", 1) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
+                            SendMessage("East", 1) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
                     except:
                         pass
 

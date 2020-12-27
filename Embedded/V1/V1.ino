@@ -257,6 +257,10 @@ void CheckCardinalDemand (String demand){
     delay(50);
     pinMode(west, INPUT);
   }
+  
+  if (demand == "Enabling"){
+    notifyEnabling = true;
+  }
 }
 
 void loop() {
