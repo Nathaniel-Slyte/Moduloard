@@ -117,7 +117,7 @@ def main():
                 if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
                     try:
                         for i in range(len(DEVICE)):
-                            SendMessage("New Calibration !", i)
+                            # SendMessage("New Calibration !", i)
                             SendMessage("South", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
                     except:
                         pass
@@ -125,7 +125,8 @@ def main():
                 if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 180 <= mouse[1] <= 240:
                     try:
                         for i in range(len(DEVICE)):
-                            SendMessage("SET random gain !", i)
+                            # SendMessage("SET random gain !", i)
+                            SendMessage("South", 1) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
                     except:
                         pass
 

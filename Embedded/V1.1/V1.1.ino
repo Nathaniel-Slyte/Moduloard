@@ -39,14 +39,12 @@ uint8_t cardinalMessage[] = {1, 5}; // first byte = 1, 1 == cardinal message. Se
 
 void setup() {
 
-  Serial.begin(115200);
-
   pinMode(11, OUTPUT);
   
   pinMode(south, INPUT);
   pinMode(east, INPUT);
-  //pinMode(west, INPUT);
-  //pinMode(north, INPUT);
+  pinMode(west, INPUT);
+  pinMode(north, INPUT);
   
   Bluefruit.begin();
   Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
@@ -127,7 +125,6 @@ void ButcherByte(uint8_t rawByteValues[], int lengthMessage){
   
   for (int i = 0; i < lengthMessage ; i++) {
     token[counter] = rawByteValues[i];
-    //Serial.println(token[counter]);
     counter++;
     
     if (counter == 20 || i == lengthMessage -1){
@@ -154,10 +151,7 @@ void GetRaw() {
       // Print the array value
       for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
         if (muca.grid[i] > 0) rawByteValues[i] = (muca.grid[i] - calibrationGrid[i] ) + 20; // The +30 is to be sure it's positive
-        Serial.print(muca.grid[i]);
-        Serial.print(",");
       }
-      Serial.println();
       ButcherByte(rawByteValues, NUM_ROWS * NUM_COLUMNS);
     }
     else { // Once the calibration is done
@@ -167,7 +161,6 @@ void GetRaw() {
         else calibrationGrid[i] = (calibrationGrid[i] + muca.grid[i]) / 2 ; // Get average
       }
         currentCalibrationStep++;
-        Serial.print("Calibration performed "); Serial.print(currentCalibrationStep); Serial.print("/"); Serial.println(CALIBRATION_STEPS);
     }
 
   } // End Muca Updated
@@ -193,7 +186,6 @@ String CheckMessageReceived(){
   {
     uint8_t ch;
     ch = (uint8_t) bleuart.read();
-    //Serial.write(ch);
     messageReceived += (char) ch;
   }
   return messageReceived;
@@ -204,26 +196,22 @@ void CheckCardinalPosition(){
     if(digitalRead(south) == HIGH){
       cardinalMessage[1] = byte(0);
       ButcherByte(cardinalMessage, 2);
-      Serial.println("South !");
       delay(50);
     }
     else if(digitalRead(east) == HIGH){
       cardinalMessage[1] = byte(1);
       ButcherByte(cardinalMessage, 2);
-      Serial.println("East !");
       delay(50);
     }
     
     else if(digitalRead(north) == HIGH){
       cardinalMessage[1] = byte(2);
       ButcherByte(cardinalMessage, 2);
-      Serial.println("North !");
       delay(50);
     }
     else if(digitalRead(west) == HIGH){
       cardinalMessage[1] = byte(3);
       ButcherByte(cardinalMessage, 2);
-      Serial.println("West !");
       delay(50);
     }
 
@@ -257,6 +245,10 @@ void CheckCardinalDemand (String demand){
     delay(50);
     pinMode(west, INPUT);
   }
+
+  if (demand == "Enabling"){
+    notifyEnabling = true;
+  }
 }
 
 void loop() {
@@ -270,7 +262,6 @@ void loop() {
   
   if (message != "")
   {
-    Serial.println(message);
     message = "";
   }
   else
