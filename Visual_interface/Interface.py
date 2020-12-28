@@ -2,12 +2,19 @@ import pygame
 import BLE_interface
 import asyncio
 import sys
+import time
 
 from pygame.locals import *
 from queue import Queue
 from datetime import datetime
 
 pygame.init()
+
+# South == 0
+# East  == 1
+# North == 2
+# West  == 3
+CARDINAL = ("South\n", "East\n", "North\n", "West\n") 
 
 FPS = 30
 
@@ -72,13 +79,33 @@ def StopAllDevices():
     for i in range(len(DEVICE)):
         DEVICE[i].StopDevice()
 
-def DetectPos():
-    print("Start to update positions !")
-    DEVICE[0].UpdatePos(150 , 150  )
-    DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
-
 def InterfaceInit(screen):
     pygame.draw.rect(screen,GREY,(SCREEN_WIDTH-300, 0, 300, SCREEN_HEIGHT))
+
+def CardinalCheck(caller: str, cardinal: int):
+    done = False
+    for i in range(len(DEVICE)):
+        done = DEVICE[i].CardinalSet(caller, cardinal)
+        if done:
+            break
+
+
+def CardinalCall():
+    for i in range(len(DEVICE)):
+        for j in range(4):
+            SendMessage(CARDINAL[j], i)
+            print("Message {} send to device {}".format(CARDINAL[j], i))
+            time.sleep(1)
+            CardinalCheck(DEVICE[i].address, j)
+
+
+def DetectPos():
+    print("Start to update positions !")
+    CardinalCall()
+    for i in range(len(DEVICE)):
+        print("I'm {} and my cardinal are : South: {}    East: {}    North:{}    West:{}".format(DEVICE[i].address, DEVICE[i].south, DEVICE[i].east, DEVICE[i].north, DEVICE[i].west))
+    # DEVICE[0].UpdatePos(150 , 150  )
+    # DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
     
 
 
@@ -92,10 +119,10 @@ def main():
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))
 
     running = True
-    try:
-        DetectPos()
-    except:
-        pass
+    # try:
+    #     DetectPos()
+    # except:
+    #     pass
 
     # set interface
     InterfaceInit(SCREEN)
@@ -116,18 +143,17 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
                     try:
-                        for i in range(len(DEVICE)):
-                            # SendMessage("New Calibration !", i)
-                            SendMessage("East", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
-                            print("message send")
+                        DetectPos()
+                        # for i in range(len(DEVICE)):
+                        #     # SendMessage("New Calibration !", i)
+                        #     SendMessage("East\n", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
                     except:
                         pass
 
                 if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 180 <= mouse[1] <= 240:
                     try:
                         for i in range(len(DEVICE)):
-                            # SendMessage("SET random gain !", i)
-                            SendMessage("East", 1) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
+                            SendMessage("SET random gain !", i)
                     except:
                         pass
 
@@ -179,10 +205,10 @@ if __name__ == '__main__':
             DEVICE.append(BLE_interface.Device(loop, address[i]))
             print ("device created : {}".format(address[i]))
 
-        pygame_task = loop.run_in_executor(None,main)
-
         for i in range(len(address)):
             loop.create_task(DEVICE[i].Connect())
+
+        pygame_task = loop.run_in_executor(None,main)
 
         loop.run_forever()
             

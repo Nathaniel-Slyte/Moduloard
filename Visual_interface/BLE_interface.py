@@ -9,6 +9,7 @@ class Device:
     def __init__(self, loop, address: str):
         self.DATA_QUEUE         = queue.Queue(maxsize=10)
         self.MESSAGE_QUEUE      = queue.Queue(maxsize=10)
+        self.CARDINAL_QUEUE     = queue.Queue(maxsize=10)
         self.UUID_NORDIC_TX     = ""
         self.UUID_NORDIC_RX     = ""
         self.X                  = 0
@@ -16,6 +17,11 @@ class Device:
         self.table              = ""
         self.address            = address
         self.active             = True
+
+        self.south              = 0
+        self.east               = 0
+        self.north              = 0
+        self.west               = 0
 
         self.disconnected_event = asyncio.Event()
         self.loop               = loop
@@ -78,11 +84,13 @@ class Device:
 
     def UARTDataReceived(self, sender, data):
 
-        # if int(data[0]) == 1:
-        print("{} Received cardinal indication : {}".format(self.address, int(data[1])))
-            
         if int(data[0]) == 1:
-            pass
+            try: 
+                self.CARDINAL_QUEUE.put(data[1])
+                print("{} Received cardinal indication : {}".format(self.address, int(data[1])))
+            except:
+                print("{} Received cardinal indication but fail to add it to queue: {}".format(self.address, int(data[1])))
+            
         else:        
             for i in range(len(data)) :
 
@@ -111,6 +119,23 @@ class Device:
             self.DATA_QUEUE.task_done()
             return item
     
+    def CardinalSet(self, caller: str, cardinal: int):
+        if self.CARDINAL_QUEUE.empty() == False:
+            try :
+                with self.CARDINAL_QUEUE.mutex:
+                    self.CARDINAL_QUEUE.queue.clear()
+            except:
+                print("failed to clear cardinal queue of {}".format(self.address))
+            
+            if cardinal == 0: self.south    = caller
+            if cardinal == 1: self.east     = caller
+            if cardinal == 2: self.north    = caller
+            if cardinal == 3: self.west     = caller 
+            
+            return True
+        else:
+            return False
+
     def UpdatePos(self, X, Y):
         self.X = X
         self.Y = Y
@@ -127,7 +152,7 @@ class Device:
 async def Snif(address_list):
     devices = await discover(timeout= 1.0)
     for d in devices:
-        print(d)
+        # print(d)
         if (d.name == "BPC"):
             address_list.append(d.address)
 
