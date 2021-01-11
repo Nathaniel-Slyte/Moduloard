@@ -82,6 +82,17 @@ def StopAllDevices():
 def InterfaceInit(screen):
     pygame.draw.rect(screen,GREY,(SCREEN_WIDTH-300, 0, 300, SCREEN_HEIGHT))
 
+
+def AddressToPos(address: str):
+    pos = -1
+    for i in range(len(DEVICE)):
+        if DEVICE[i].address == address:
+            pos = i
+            break
+    print ("Position : {}".format(pos))
+    return pos
+
+
 def CardinalCheck(caller: str, cardinal: int):
     done = False
     for i in range(len(DEVICE)):
@@ -95,16 +106,48 @@ def CardinalCall():
         for j in range(4):
             SendMessage(CARDINAL[j], i)
             print("Message {} send to device {}".format(CARDINAL[j], i))
-            time.sleep(1)
+            time.sleep(1.2)
             CardinalCheck(DEVICE[i].address, j)
 
+def PosSetting(current_device : int, post_device, cardinal : int):
+    if cardinal != 4 :
+        if cardinal == 0 :
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y + SIZE_PIXEL*NB_ROW + 20)
+        if cardinal == 1 :
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X - SIZE_PIXEL*NB_COLOMN - 20, DEVICE[post_device].Y)
+        if cardinal == 2 :
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y - SIZE_PIXEL*NB_ROW - 20)
+        if cardinal == 3 :
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X + SIZE_PIXEL*NB_COLOMN + 20, DEVICE[post_device].Y)
+    
+    if DEVICE[current_device].south != 0 :
+        next_pos = AddressToPos(DEVICE[current_device].south)
+        if next_pos != post_device:
+            PosSetting(next_pos, current_device, 0)
+    if DEVICE[current_device].east != 0 :
+        next_pos = AddressToPos(DEVICE[current_device].east)
+        if next_pos != post_device:
+            PosSetting(next_pos, current_device, 1)
+    if DEVICE[current_device].north != 0 :
+        next_pos = AddressToPos(DEVICE[current_device].north)
+        if next_pos != post_device:
+            PosSetting(next_pos, current_device, 2)
+    if DEVICE[current_device].west != 0 :
+        next_pos = AddressToPos(DEVICE[current_device].west)
+        if next_pos != post_device:
+            PosSetting(next_pos, current_device, 3)
+    
 
 def DetectPos():
     print("Start to update positions !")
     CardinalCall()
     for i in range(len(DEVICE)):
         print("I'm {} and my cardinal are : South: {}    East: {}    North:{}    West:{}".format(DEVICE[i].address, DEVICE[i].south, DEVICE[i].east, DEVICE[i].north, DEVICE[i].west))
-    # DEVICE[0].UpdatePos(150 , 150  )
+    DEVICE[0].UpdatePos(200 , 200)
+    try:
+        PosSetting(0, 0, 4) # 0 correspond to the first device position in the list, 4 correspond to the cardinal position which it come from, the 4 mean it come from no one (cardinal are between 0 and 3)
+    except:
+        print("PosSetting failled")
     # DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
     
 
@@ -144,6 +187,8 @@ def main():
                 if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
                     try:
                         DetectPos()
+                        for i in range(len(DEVICE)):
+                            SendMessage("Enabling\n", i)
                         # for i in range(len(DEVICE)):
                         #     # SendMessage("New Calibration !", i)
                         #     SendMessage("East\n", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
