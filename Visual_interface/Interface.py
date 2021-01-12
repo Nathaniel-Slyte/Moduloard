@@ -20,9 +20,9 @@ FPS = 30
 
 NB_ROW          = 21
 NB_COLOMN       = 12
-SIZE_PIXEL      = 16
-SCREEN_WIDTH   = 1280
-SCREEN_HEIGHT    = 720
+SIZE_PIXEL      = 12
+SCREEN_WIDTH    = 1820 # 1280
+SCREEN_HEIGHT   = 880 # 720
 
 DEVICE          = []
 
@@ -143,8 +143,8 @@ def DetectPos():
     CardinalCall()
     for i in range(len(DEVICE)):
         print("I'm {} and my cardinal are : South: {}    East: {}    North:{}    West:{}".format(DEVICE[i].address, DEVICE[i].south, DEVICE[i].east, DEVICE[i].north, DEVICE[i].west))
-    DEVICE[0].UpdatePos(200 , 200)
     try:
+        DEVICE[0].UpdatePos(500 , 300)
         PosSetting(0, 0, 4) # 0 correspond to the first device position in the list, 4 correspond to the cardinal position which it come from, the 4 mean it come from no one (cardinal are between 0 and 3)
     except:
         print("PosSetting failled")
