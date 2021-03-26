@@ -120,18 +120,24 @@ def PosSetting(current_device : int, post_device, cardinal : int):
         if cardinal == 3 :
             DEVICE[current_device].UpdatePos(DEVICE[post_device].X + SIZE_PIXEL*NB_COLOMN + 20, DEVICE[post_device].Y)
     
+    # Send the recursive loop to each cadinal position
     if DEVICE[current_device].south != 0 :
+        # Check if the cardinal pos doesn't come back to the old device
         next_pos = AddressToPos(DEVICE[current_device].south)
         if next_pos != post_device:
+            # go to the next device
             PosSetting(next_pos, current_device, 0)
+
     if DEVICE[current_device].east != 0 :
         next_pos = AddressToPos(DEVICE[current_device].east)
         if next_pos != post_device:
             PosSetting(next_pos, current_device, 1)
+
     if DEVICE[current_device].north != 0 :
         next_pos = AddressToPos(DEVICE[current_device].north)
         if next_pos != post_device:
             PosSetting(next_pos, current_device, 2)
+
     if DEVICE[current_device].west != 0 :
         next_pos = AddressToPos(DEVICE[current_device].west)
         if next_pos != post_device:
@@ -172,8 +178,12 @@ def main():
 
 
     smallfont = pygame.font.SysFont('Corbel',35) 
-    text_calib = smallfont.render('Calibration' , True , WHITE) 
-    text_gain = smallfont.render('Set gain' , True , WHITE) 
+    text_calib = smallfont.render('Calibrate' , True , WHITE) 
+    text_gain = smallfont.render('Set gain' , True , WHITE)
+    text_arrow_r = smallfont.render('>' , True , WHITE)
+    text_arrow_l = smallfont.render('<' , True , WHITE)
+    text_arrow_u = smallfont.render('U' , True , WHITE)
+    text_arrow_d = smallfont.render('D' , True , WHITE) 
 
     # main loop
     while running:
@@ -201,6 +211,34 @@ def main():
                             SendMessage("SET random gain !", i)
                     except:
                         pass
+                
+                # touch button Up
+                if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 300 <= mouse[1] <= 360:
+                    try:
+                        print("AYE")
+                    except:
+                        pass
+
+                # touch button Down
+                if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 440 <= mouse[1] <= 500:
+                    try:
+                        print("AYE")
+                    except:
+                        pass
+
+                # touch button Left
+                if SCREEN_WIDTH-205 <= mouse[0] <= SCREEN_WIDTH-145 and 370 <= mouse[1] <= 430:
+                    try:
+                        print("AYE")
+                    except:
+                        pass
+
+                # touch button Right
+                if SCREEN_WIDTH-135 <= mouse[0] <= SCREEN_WIDTH-75 and 370 <= mouse[1] <= 430:
+                    try:
+                        print("AYE")
+                    except:
+                        pass
 
             # only do something if the event is of type QUIT
             if event.type == pygame.QUIT:
@@ -224,6 +262,36 @@ def main():
         else: 
             pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-220,180,160,60]) 
         SCREEN.blit(text_gain , (SCREEN_WIDTH-210,200)) 
+
+
+
+        # Button management Up     
+        if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 300 <= mouse[1] <= 360: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-170,300,60,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-170,300,60,60]) 
+        SCREEN.blit(text_arrow_u , (SCREEN_WIDTH-150,320)) 
+
+        # Button management Down     
+        if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 440 <= mouse[1] <= 500: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-170,440,60,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-170,440,60,60]) 
+        SCREEN.blit(text_arrow_d , (SCREEN_WIDTH-150,460)) 
+
+        # Button management Left
+        if SCREEN_WIDTH-205 <= mouse[0] <= SCREEN_WIDTH-145 and 370 <= mouse[1] <= 430: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-205,370,60,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-205,370,60,60]) 
+        SCREEN.blit(text_arrow_l , (SCREEN_WIDTH-185,385)) 
+
+        # Button management Right    
+        if SCREEN_WIDTH-135 <= mouse[0] <= SCREEN_WIDTH-75 and 370 <= mouse[1] <= 430: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-135,370,60,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-135,370,60,60]) 
+        SCREEN.blit(text_arrow_r , (SCREEN_WIDTH-115,385)) 
 
         # Touch interface management
         try:
