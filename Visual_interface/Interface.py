@@ -197,7 +197,7 @@ def main():
     text_arrow_u    = smallfont.render('U' , True , WHITE)
     text_arrow_d    = smallfont.render('D' , True , WHITE) 
 
-
+    selected_matrix = 0
 
     # main loop
     while running:
@@ -232,42 +232,48 @@ def main():
                 # touch button Up
                 if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 300 <= mouse[1] <= 360:
                     try:
-                        for i in range(len(DEVICE)):
-                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
-                            DEVICE[i].UpdatePos(DEVICE[i].X, DEVICE[i].Y - 20)
-                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y - 20)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
                     except:
                         pass
 
                 # touch button Down
                 if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 440 <= mouse[1] <= 500:
                     try:
-                        for i in range(len(DEVICE)):
-                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
-                            DEVICE[i].UpdatePos(DEVICE[i].X, DEVICE[i].Y + 20)
-                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y + 20)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
                     except:
                         pass
 
                 # touch button Left
                 if SCREEN_WIDTH-205 <= mouse[0] <= SCREEN_WIDTH-145 and 370 <= mouse[1] <= 430:
                     try:
-                        for i in range(len(DEVICE)):
-                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
-                            DEVICE[i].UpdatePos(DEVICE[i].X - 20, DEVICE[i].Y)
-                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X - 20, DEVICE[selected_matrix].Y)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
                     except:
                         pass
 
                 # touch button Right
                 if SCREEN_WIDTH-135 <= mouse[0] <= SCREEN_WIDTH-75 and 370 <= mouse[1] <= 430:
                     try:
-                        for i in range(len(DEVICE)):
-                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
-                            DEVICE[i].UpdatePos(DEVICE[i].X + 20, DEVICE[i].Y)
-                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X + 20, DEVICE[selected_matrix].Y)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
                     except:
                         pass
+
+                
+                # Interface selection
+                for i in range(len(DEVICE)):
+                    if DEVICE[i].X <= mouse[0] <= DEVICE[i].X + NB_COLOMN * SIZE_PIXEL and DEVICE[i].Y <= mouse[1] <= DEVICE[i].Y + NB_ROW * SIZE_PIXEL:
+                        try:
+                            print(f"INTERFACE {i} !")
+                            selected_matrix = i
+                        except:
+                            pass
 
             # only do something if the event is of type QUIT
             if event.type == pygame.QUIT:
@@ -277,6 +283,8 @@ def main():
                 StopAllDevices()
                 pygame.quit()
                 sys.exit()
+
+        ############ BUTTON VISUAL ############
 
         # Button management Calibration        
         if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160: 
@@ -322,8 +330,10 @@ def main():
             pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-135,370,60,60]) 
         SCREEN.blit(text_arrow_r , (SCREEN_WIDTH-115,385)) 
 
+
+
+
         # Touch interface management
-        
         try:
             # pygame.draw.rect(SCREEN,BLACK,(0, 0, SCREEN_WIDTH-300, SCREEN_HEIGHT))
             for i in range(len(DEVICE)):  
