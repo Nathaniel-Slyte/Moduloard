@@ -17,6 +17,7 @@ class Device:
         self.table              = ""
         self.address            = address
         self.active             = True
+        self.data_matrix        = 0
 
         self.south              = 0
         self.east               = 0

@@ -58,7 +58,7 @@ def SetPixels(screen, data_table, X, Y):
 def CleanPixels(screen, X, Y):
     # print("X: {} Y: {}".format(X,Y))
     pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
-    print("pixel cleaning")
+
     for y in range(NB_ROW):
         for x in range(NB_COLOMN):
             pixel.fill(BLACK)                                               # set color of the pixel (3x rgb because grey)
@@ -72,7 +72,8 @@ def UpdatePixels(screen, device :int):
         return False
     else :
         # print(raw_table)
-        data_table = DataParser(raw_table)
+        data_table                  = DataParser(raw_table)
+        DEVICE[device].data_matrix  = data_table
         CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y)
         SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y)
         # SendMessage("Message received !", device)
@@ -234,6 +235,7 @@ def main():
                         for i in range(len(DEVICE)):
                             CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
                             DEVICE[i].UpdatePos(DEVICE[i].X, DEVICE[i].Y - 20)
+                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
                     except:
                         pass
 
@@ -241,7 +243,9 @@ def main():
                 if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 440 <= mouse[1] <= 500:
                     try:
                         for i in range(len(DEVICE)):
+                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
                             DEVICE[i].UpdatePos(DEVICE[i].X, DEVICE[i].Y + 20)
+                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
                     except:
                         pass
 
@@ -249,7 +253,9 @@ def main():
                 if SCREEN_WIDTH-205 <= mouse[0] <= SCREEN_WIDTH-145 and 370 <= mouse[1] <= 430:
                     try:
                         for i in range(len(DEVICE)):
+                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
                             DEVICE[i].UpdatePos(DEVICE[i].X - 20, DEVICE[i].Y)
+                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
                     except:
                         pass
 
@@ -257,7 +263,9 @@ def main():
                 if SCREEN_WIDTH-135 <= mouse[0] <= SCREEN_WIDTH-75 and 370 <= mouse[1] <= 430:
                     try:
                         for i in range(len(DEVICE)):
+                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
                             DEVICE[i].UpdatePos(DEVICE[i].X + 20, DEVICE[i].Y)
+                            SetPixels(SCREEN, DEVICE[i].data_matrix, DEVICE[i].X, DEVICE[i].Y)
                     except:
                         pass
 
