@@ -30,13 +30,8 @@ GREY            = (120,120,120)
 GREY_LIGHT      = (170,170,170)  
 GREY_DARK       = (80,80,80) 
 WHITE           = (255,255,255)
+BLACK           = (0,0,0)
 
-
-# try:
-#     DEVICE[device].PixelsSet(pixels)
-# except: # catch *all* exceptions
-#     e = sys.exc_info()[0]
-#     print("Error: {}".format(e) )
 
 def DataParser(data : str):
     data = data.split(",")
@@ -44,7 +39,7 @@ def DataParser(data : str):
     return data
 
 def SetPixels(screen, data_table, X, Y):
-    print("X: {} Y: {}".format(X,Y))
+    # print("X: {} Y: {}".format(X,Y))
     pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
     
     for y in range(NB_ROW):
@@ -58,7 +53,18 @@ def SetPixels(screen, data_table, X, Y):
             pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
             screen.blit(pixel, (X + x * SIZE_PIXEL, Y + y * SIZE_PIXEL))          # update color of the pixel
 
-    print ("Pixels set !")
+    # print ("Pixels set !")
+
+def CleanPixels(screen, X, Y):
+    # print("X: {} Y: {}".format(X,Y))
+    pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
+    print("pixel cleaning")
+    for y in range(NB_ROW):
+        for x in range(NB_COLOMN):
+            pixel.fill(BLACK)                                               # set color of the pixel (3x rgb because grey)
+            screen.blit(pixel, (X + x * SIZE_PIXEL, Y + y * SIZE_PIXEL))    # update color of the pixel
+
+    # print ("Pixels set !")
 
 def UpdatePixels(screen, device :int):
     raw_table = DEVICE[device].Dequeue()
@@ -67,9 +73,12 @@ def UpdatePixels(screen, device :int):
     else :
         # print(raw_table)
         data_table = DataParser(raw_table)
+        CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y)
         SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y)
         # SendMessage("Message received !", device)
         return True
+
+################ CONTROL ################
 
 def SendMessage(message: str, device: int):
     message = message.encode('utf-8')
@@ -81,7 +90,9 @@ def StopAllDevices():
 
 def InterfaceInit(screen):
     pygame.draw.rect(screen,GREY,(SCREEN_WIDTH-300, 0, 300, SCREEN_HEIGHT))
+    pygame.draw.rect(screen,BLACK,(0, 0, SCREEN_WIDTH-300, SCREEN_HEIGHT))
 
+################ CARDINAL ################
 
 def AddressToPos(address: str):
     pos = -1
@@ -106,7 +117,7 @@ def CardinalCall():
         for j in range(4):
             SendMessage(CARDINAL[j], i)
             print("Message {} send to device {}".format(CARDINAL[j], i))
-            time.sleep(1.2)
+            time.sleep(2)
             CardinalCheck(DEVICE[i].address, j)
 
 def PosSetting(current_device : int, post_device, cardinal : int):
@@ -156,18 +167,18 @@ def DetectPos():
         print("PosSetting failled")
     # DEVICE[1].UpdatePos(DEVICE[0].X + SIZE_PIXEL*NB_COLOMN + 40, DEVICE[0].Y )
     
-
+################ MAIN ################
 
 def main():
 
     # Initialize pygame data
-    FramePerSec = pygame.time.Clock()
+    FramePerSec     = pygame.time.Clock()
     pygame.display.set_caption("Moduloard Interface")
 
     # Initiate the pygame screen
-    SCREEN = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))
+    SCREEN          = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))
 
-    running = True
+    running         = True
     # try:
     #     DetectPos()
     # except:
@@ -177,13 +188,15 @@ def main():
     InterfaceInit(SCREEN)
 
 
-    smallfont = pygame.font.SysFont('Corbel',35) 
-    text_calib = smallfont.render('Calibrate' , True , WHITE) 
-    text_gain = smallfont.render('Set gain' , True , WHITE)
-    text_arrow_r = smallfont.render('>' , True , WHITE)
-    text_arrow_l = smallfont.render('<' , True , WHITE)
-    text_arrow_u = smallfont.render('U' , True , WHITE)
-    text_arrow_d = smallfont.render('D' , True , WHITE) 
+    smallfont       = pygame.font.SysFont('Corbel',35) 
+    text_calib      = smallfont.render('Calibrate' , True , WHITE) 
+    text_gain       = smallfont.render('Set gain' , True , WHITE)
+    text_arrow_r    = smallfont.render('>' , True , WHITE)
+    text_arrow_l    = smallfont.render('<' , True , WHITE)
+    text_arrow_u    = smallfont.render('U' , True , WHITE)
+    text_arrow_d    = smallfont.render('D' , True , WHITE) 
+
+
 
     # main loop
     while running:
@@ -194,6 +207,8 @@ def main():
         for event in pygame.event.get():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+
+                # Calibration button
                 if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
                     try:
                         DetectPos()
@@ -204,7 +219,8 @@ def main():
                         #     SendMessage("East\n", 0) # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
                     except:
                         pass
-
+                
+                # set gain button 
                 if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 180 <= mouse[1] <= 240:
                     try:
                         for i in range(len(DEVICE)):
@@ -215,28 +231,33 @@ def main():
                 # touch button Up
                 if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 300 <= mouse[1] <= 360:
                     try:
-                        print("AYE")
+                        for i in range(len(DEVICE)):
+                            CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y)
+                            DEVICE[i].UpdatePos(DEVICE[i].X, DEVICE[i].Y - 20)
                     except:
                         pass
 
                 # touch button Down
                 if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 440 <= mouse[1] <= 500:
                     try:
-                        print("AYE")
+                        for i in range(len(DEVICE)):
+                            DEVICE[i].UpdatePos(DEVICE[i].X, DEVICE[i].Y + 20)
                     except:
                         pass
 
                 # touch button Left
                 if SCREEN_WIDTH-205 <= mouse[0] <= SCREEN_WIDTH-145 and 370 <= mouse[1] <= 430:
                     try:
-                        print("AYE")
+                        for i in range(len(DEVICE)):
+                            DEVICE[i].UpdatePos(DEVICE[i].X - 20, DEVICE[i].Y)
                     except:
                         pass
 
                 # touch button Right
                 if SCREEN_WIDTH-135 <= mouse[0] <= SCREEN_WIDTH-75 and 370 <= mouse[1] <= 430:
                     try:
-                        print("AYE")
+                        for i in range(len(DEVICE)):
+                            DEVICE[i].UpdatePos(DEVICE[i].X + 20, DEVICE[i].Y)
                     except:
                         pass
 
@@ -294,7 +315,9 @@ def main():
         SCREEN.blit(text_arrow_r , (SCREEN_WIDTH-115,385)) 
 
         # Touch interface management
+        
         try:
+            # pygame.draw.rect(SCREEN,BLACK,(0, 0, SCREEN_WIDTH-300, SCREEN_HEIGHT))
             for i in range(len(DEVICE)):  
                 state = UpdatePixels(SCREEN, i)
             pygame.display.update() # Update values on screen

@@ -150,7 +150,7 @@ class Device:
 ################################# END CLASS DEVICE #################################
 
 async def Snif(address_list):
-    devices = await discover(timeout= 1.0)
+    devices = await discover(timeout= 2.0)
     for d in devices:
         # print(d)
         if (d.name == "BPC"):
