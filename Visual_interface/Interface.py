@@ -20,6 +20,7 @@ FPS = 30
 
 NB_ROW          = 21
 NB_COLOMN       = 12
+NB_ROW_MINUS    = 9
 SIZE_PIXEL      = 12
 SCREEN_WIDTH    = 1820 # 1280
 SCREEN_HEIGHT   = 880 # 720
@@ -38,11 +39,11 @@ def DataParser(data : str):
     data.pop()
     return data
 
-def SetPixels(screen, data_table, X, Y):
+def SetPixels(screen, data_table, X, Y, multiplicator):
     # print("X: {} Y: {}".format(X,Y))
-    pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
+    pixel = pygame.Surface((SIZE_PIXEL * multiplicator, SIZE_PIXEL * multiplicator))
     
-    for y in range(NB_ROW):
+    for y in range(NB_ROW_MINUS, NB_ROW):
         for x in range(NB_COLOMN):
 
             pos = y * NB_COLOMN + x                               # Position in the X Y matrix
@@ -51,18 +52,18 @@ def SetPixels(screen, data_table, X, Y):
             if rgb >255:
                 rgb = 255
             pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
-            screen.blit(pixel, (X + x * SIZE_PIXEL, Y + y * SIZE_PIXEL))          # update color of the pixel
+            screen.blit(pixel, (X + x * SIZE_PIXEL * multiplicator, Y + (y-NB_ROW_MINUS) * SIZE_PIXEL * multiplicator))          # update color of the pixel
 
     # print ("Pixels set !")
 
-def CleanPixels(screen, X, Y):
+def CleanPixels(screen, X, Y, multiplicator):
     # print("X: {} Y: {}".format(X,Y))
-    pixel = pygame.Surface((SIZE_PIXEL,SIZE_PIXEL))
+    pixel = pygame.Surface((SIZE_PIXEL * multiplicator, SIZE_PIXEL * multiplicator))
 
-    for y in range(NB_ROW):
+    for y in range(NB_ROW_MINUS, NB_ROW):
         for x in range(NB_COLOMN):
             pixel.fill(BLACK)                                               # set color of the pixel (3x rgb because grey)
-            screen.blit(pixel, (X + x * SIZE_PIXEL, Y + y * SIZE_PIXEL))    # update color of the pixel
+            screen.blit(pixel, (X + x * SIZE_PIXEL * multiplicator, Y + (y-NB_ROW_MINUS) * SIZE_PIXEL * multiplicator))    # update color of the pixel
 
     # print ("Pixels set !")
 
@@ -74,8 +75,8 @@ def UpdatePixels(screen, device :int):
         # print(raw_table)
         data_table                  = DataParser(raw_table)
         DEVICE[device].data_matrix  = data_table
-        CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y)
-        SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y)
+        CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
+        SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
         # SendMessage("Message received !", device)
         return True
 
@@ -124,11 +125,11 @@ def CardinalCall():
 def PosSetting(current_device : int, post_device, cardinal : int):
     if cardinal != 4 :
         if cardinal == 0 :
-            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y + SIZE_PIXEL*NB_ROW + 20)
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y + SIZE_PIXEL*(NB_ROW-NB_ROW_MINUS) + 20)
         if cardinal == 1 :
             DEVICE[current_device].UpdatePos(DEVICE[post_device].X - SIZE_PIXEL*NB_COLOMN - 20, DEVICE[post_device].Y)
         if cardinal == 2 :
-            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y - SIZE_PIXEL*NB_ROW - 20)
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y - SIZE_PIXEL*(NB_ROW-NB_ROW_MINUS) - 20)
         if cardinal == 3 :
             DEVICE[current_device].UpdatePos(DEVICE[post_device].X + SIZE_PIXEL*NB_COLOMN + 20, DEVICE[post_device].Y)
     
@@ -195,7 +196,9 @@ def main():
     text_arrow_r    = smallfont.render('>' , True , WHITE)
     text_arrow_l    = smallfont.render('<' , True , WHITE)
     text_arrow_u    = smallfont.render('U' , True , WHITE)
-    text_arrow_d    = smallfont.render('D' , True , WHITE) 
+    text_arrow_d    = smallfont.render('D' , True , WHITE)
+    text_size_up    = smallfont.render('+' , True , WHITE) 
+    text_size_down  = smallfont.render('-' , True , WHITE) 
 
     selected_matrix = 0
 
@@ -232,43 +235,64 @@ def main():
                 # touch button Up
                 if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 300 <= mouse[1] <= 360:
                     try:
-                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                         DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y - 20)
-                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                     except:
                         pass
 
                 # touch button Down
                 if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 440 <= mouse[1] <= 500:
                     try:
-                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                         DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y + 20)
-                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                     except:
                         pass
 
                 # touch button Left
                 if SCREEN_WIDTH-205 <= mouse[0] <= SCREEN_WIDTH-145 and 370 <= mouse[1] <= 430:
                     try:
-                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                         DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X - 20, DEVICE[selected_matrix].Y)
-                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                     except:
                         pass
 
                 # touch button Right
                 if SCREEN_WIDTH-135 <= mouse[0] <= SCREEN_WIDTH-75 and 370 <= mouse[1] <= 430:
                     try:
-                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                         DEVICE[selected_matrix].UpdatePos(DEVICE[selected_matrix].X + 20, DEVICE[selected_matrix].Y)
-                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y)
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
+                    except:
+                        pass
+
+
+                # touch button up size
+                if SCREEN_WIDTH-65 <= mouse[0] <= SCREEN_WIDTH-5 and 335 <= mouse[1] <= 395:
+                    try:
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
+                        DEVICE[selected_matrix].size_multiplicator = DEVICE[selected_matrix].size_multiplicator + 0.2
+                        print(f"device : {selected_matrix}, size : {DEVICE[selected_matrix].size_multiplicator}")
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
+                    except:
+                        pass
+                
+                # touch button down size
+                if SCREEN_WIDTH-65 <= mouse[0] <= SCREEN_WIDTH-5 and 405 <= mouse[1] <= 465:
+                    try:
+                        CleanPixels(SCREEN, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
+                        DEVICE[selected_matrix].size_multiplicator = DEVICE[selected_matrix].size_multiplicator - 0.2
+                        print(f"device : {selected_matrix}, size : {DEVICE[selected_matrix].size_multiplicator}")
+                        SetPixels(SCREEN, DEVICE[selected_matrix].data_matrix, DEVICE[selected_matrix].X, DEVICE[selected_matrix].Y, DEVICE[selected_matrix].size_multiplicator)
                     except:
                         pass
 
                 
                 # Interface selection
                 for i in range(len(DEVICE)):
-                    if DEVICE[i].X <= mouse[0] <= DEVICE[i].X + NB_COLOMN * SIZE_PIXEL and DEVICE[i].Y <= mouse[1] <= DEVICE[i].Y + NB_ROW * SIZE_PIXEL:
+                    if DEVICE[i].X <= mouse[0] <= DEVICE[i].X + NB_COLOMN * SIZE_PIXEL and DEVICE[i].Y <= mouse[1] <= DEVICE[i].Y + (NB_ROW-NB_ROW_MINUS) * SIZE_PIXEL:
                         try:
                             print(f"INTERFACE {i} !")
                             selected_matrix = i
@@ -329,6 +353,20 @@ def main():
         else: 
             pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-135,370,60,60]) 
         SCREEN.blit(text_arrow_r , (SCREEN_WIDTH-115,385)) 
+
+        # Button management up size    
+        if SCREEN_WIDTH-65 <= mouse[0] <= SCREEN_WIDTH-5 and 335 <= mouse[1] <= 395: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-65,335,60,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-65,335,60,60]) 
+        SCREEN.blit(text_size_up , (SCREEN_WIDTH-45,350))
+
+        # Button management down size    
+        if SCREEN_WIDTH-65 <= mouse[0] <= SCREEN_WIDTH-5 and 405 <= mouse[1] <= 465: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-65,405,60,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-65,405,60,60]) 
+        SCREEN.blit(text_size_down , (SCREEN_WIDTH-45,425))
 
 
 

@@ -39,7 +39,7 @@ uint8_t cardinalMessage[] = {1, 5}; // first byte = 1, 1 == cardinal message. Se
 
 void setup() {
 
-  //Serial.begin(115200);
+  pinMode(11, OUTPUT);
   
   pinMode(south, INPUT);
   pinMode(east, INPUT);
@@ -187,7 +187,6 @@ String CheckMessageReceived(){
     uint8_t ch;
     ch = (uint8_t) bleuart.read();
     messageReceived += (char) ch;
-    //Serial.println(messageReceived);
   }
   return messageReceived;
 }
@@ -199,7 +198,7 @@ void CheckCardinalPosition(){
       ButcherByte(cardinalMessage, 2);
       delay(50);
     }
-    /*else if(digitalRead(east) == HIGH){
+    else if(digitalRead(east) == HIGH){
       cardinalMessage[1] = byte(1);
       ButcherByte(cardinalMessage, 2);
       delay(50);
@@ -215,43 +214,41 @@ void CheckCardinalPosition(){
       ButcherByte(cardinalMessage, 2);
       delay(50);
     }
-*/
+
 }
 
 void CheckCardinalDemand (String demand){
   if (demand == "South"){
-    //Serial.println("South command !");
     pinMode(south, OUTPUT);
     digitalWrite(south, HIGH);
     delay(50);
     pinMode(south, INPUT);
   }
 
-  if (demand == "East\n"){
+  if (demand == "East"){
     pinMode(east, OUTPUT);
     digitalWrite(east, HIGH);
     delay(50);
     pinMode(east, INPUT);
   }
 
-  if (demand == "North\n"){
+  if (demand == "North"){
     pinMode(north, OUTPUT);
     digitalWrite(north, HIGH);
     delay(50);
     pinMode(north, INPUT);
   }
 
-  if (demand == "West\n"){
+  if (demand == "West"){
     pinMode(west, OUTPUT);
     digitalWrite(west, HIGH);
     delay(50);
     pinMode(west, INPUT);
   }
 
-  if (demand == "Enabling\n"){
+  if (demand == "Enabling"){
     notifyEnabling = true;
   }
-  delay(40);
 }
 
 void loop() {
