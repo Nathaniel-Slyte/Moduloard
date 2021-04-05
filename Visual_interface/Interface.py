@@ -273,21 +273,26 @@ def main():
     # set interface
     InterfaceInit(SCREEN)
 
+    gain_select = False
+    gain_text = ""
 
-    smallfont       = pygame.font.SysFont('Corbel',35) 
-    text_calib      = smallfont.render('Calibrate' , True , WHITE) 
-    text_gain       = smallfont.render('Set gain' , True , WHITE)
-    text_arrow_r    = smallfont.render('>' , True , WHITE)
-    text_arrow_l    = smallfont.render('<' , True , WHITE)
-    text_arrow_u    = smallfont.render('U' , True , WHITE)
-    text_arrow_d    = smallfont.render('D' , True , WHITE)
-    text_size_up    = smallfont.render('+' , True , WHITE) 
-    text_size_down  = smallfont.render('-' , True , WHITE) 
+    smallfont               = pygame.font.SysFont('Corbel',35) 
+    text_calib              = smallfont.render('Calibrate' , True , WHITE) 
+    text_gain               = smallfont.render('Set gain' , True , WHITE)
+    text_arrow_r            = smallfont.render('>' , True , WHITE)
+    text_arrow_l            = smallfont.render('<' , True , WHITE)
+    text_arrow_u            = smallfont.render('U' , True , WHITE)
+    text_arrow_d            = smallfont.render('D' , True , WHITE)
+    text_size_up            = smallfont.render('+' , True , WHITE) 
+    text_size_down          = smallfont.render('-' , True , WHITE) 
+    
+
 
     selected_matrix = 0
 
     # main loop
     while running:
+        text_gain_selection     = smallfont.render(gain_text , True , WHITE) 
 
         mouse = pygame.mouse.get_pos()
 
@@ -297,7 +302,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
 
                 # Calibration button
-                if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160:
+                if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-40 and 100 <= mouse[1] <= 160:
                     try:
                         DetectPos()
                         for i in range(len(DEVICE)):
@@ -308,11 +313,20 @@ def main():
                     except:
                         pass
                 
+                # text gain button 
+                if SCREEN_WIDTH-280 <= mouse[0] <= SCREEN_WIDTH-220 and 180 <= mouse[1] <= 240:
+                    try:
+                        gain_select = True
+                    except:
+                        pass
+                
                 # set gain button 
-                if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 180 <= mouse[1] <= 240:
+                if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-40 and 180 <= mouse[1] <= 240:
                     try:
                         for i in range(len(DEVICE)):
-                            SendMessage("SET random gain !", i)
+                            SendMessage("0" + gain_text, i)
+                        gain_select = False
+                        gain_text   = ""
                     except:
                         pass
                 
@@ -383,6 +397,10 @@ def main():
                         except:
                             pass
 
+            if event.type == pygame.KEYDOWN:
+                if gain_select:
+                    gain_text += event.unicode
+            
             # only do something if the event is of type QUIT
             if event.type == pygame.QUIT:
                 # change the value to False, to exit the main loop
@@ -395,20 +413,25 @@ def main():
         ############ BUTTON VISUAL ############
 
         # Button management Calibration        
-        if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 100 <= mouse[1] <= 160: 
-            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-220,100,160,60]) 
+        if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-40 and 100 <= mouse[1] <= 160: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-200,100,160,60]) 
         else: 
-            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-220,100,160,60]) 
-        SCREEN.blit(text_calib , (SCREEN_WIDTH-210,120)) 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-200,100,160,60]) 
+        SCREEN.blit(text_calib , (SCREEN_WIDTH-190,120)) 
 
         # Button management Gain       
-        if SCREEN_WIDTH-220 <= mouse[0] <= SCREEN_WIDTH-60 and 180 <= mouse[1] <= 240: 
-            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-220,180,160,60]) 
+        if SCREEN_WIDTH-200 <= mouse[0] <= SCREEN_WIDTH-40 and 180 <= mouse[1] <= 240: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-200,180,160,60]) 
         else: 
-            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-220,180,160,60]) 
-        SCREEN.blit(text_gain , (SCREEN_WIDTH-210,200)) 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-200,180,160,60]) 
+        SCREEN.blit(text_gain , (SCREEN_WIDTH-190,200)) 
 
-
+        # Button text Gain       
+        if SCREEN_WIDTH-280 <= mouse[0] <= SCREEN_WIDTH-220 and 180 <= mouse[1] <= 240: 
+            pygame.draw.rect(SCREEN,GREY_LIGHT,[SCREEN_WIDTH-280,180,60,60]) 
+        else: 
+            pygame.draw.rect(SCREEN,GREY_DARK,[SCREEN_WIDTH-280,180,60,60]) 
+        SCREEN.blit(text_gain_selection , (SCREEN_WIDTH-270,200)) 
 
         # Button management Up     
         if SCREEN_WIDTH-170 <= mouse[0] <= SCREEN_WIDTH-110 and 300 <= mouse[1] <= 360: 

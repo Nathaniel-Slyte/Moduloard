@@ -69,11 +69,12 @@ void setup() {
 
   startAdv();
   
-  muca.init(false);
-  //muca.useRawData(true); // If you use the raw data, the interrupt is not working
+  muca.init(true);
+  muca.setResolution(1000, 1000);
+  muca.setReportRate(6);
 
   delay(50);
-  muca.setGain(8);
+  muca.setGain(1);
   
 }
 
@@ -147,7 +148,7 @@ void ButcherByte(uint8_t rawByteValues[], int lengthMessage){
     }  
   }
 }
-
+/*
 void GetRaw() {
   //if (muca.updated()) {
     uint8_t rawByteValues[144];
@@ -185,6 +186,43 @@ void SendFalseRawByte() {
   ButcherByte(rawByteValues, NUM_ROWS * NUM_COLUMNS);
 
 }
+*/
+
+void GetTouch() {
+  if (muca.updated()) {
+    
+    int byteLength = muca.getNumberOfTouches()*5 + 2;
+    
+    uint8_t rawByteValues[20];
+    if (muca.getNumberOfTouches() > 3){
+      uint8_t rawByteValues[40];
+    }
+    
+    rawByteValues[0]    = byte(2);
+    rawByteValues[1]    = byte(muca.getNumberOfTouches());
+    int registerIndex   = 0;
+    
+    for (int i = 0; i < muca.getNumberOfTouches(); i++) {
+      registerIndex                       = (i * 5) + 2;
+      //rawByteValues[registerIndex]        = muca.getTouch(i).id;
+      rawByteValues[registerIndex]        = highByte(muca.getTouch(i).x);
+      rawByteValues[registerIndex + 1]    = lowByte(muca.getTouch(i).x);
+      rawByteValues[registerIndex + 2]    = highByte(muca.getTouch(i).y);
+      rawByteValues[registerIndex + 3]    = lowByte(muca.getTouch(i).y);
+      rawByteValues[registerIndex + 4]    = muca.getTouch(i).weight;
+      /*
+      if (i != 0)bleuart.print("|");
+      bleuart.print(muca.getTouch(i).id); bleuart.print(":");
+      bleuart.print(muca.getTouch(i).flag); bleuart.print(":");
+      bleuart.print(muca.getTouch(i).x); bleuart.print(":");
+      bleuart.print(muca.getTouch(i).y); bleuart.print(":");
+      bleuart.print(muca.getTouch(i).weight);
+      */
+    }
+    
+    ButcherByte(rawByteValues, byteLength);
+  }
+}
 
 String CheckMessageReceived(){
   String messageReceived = "";
@@ -193,7 +231,6 @@ String CheckMessageReceived(){
     uint8_t ch;
     ch = (uint8_t) bleuart.read();
     messageReceived += (char) ch;
-    //Serial.println(messageReceived);
   }
   return messageReceived;
 }
@@ -260,11 +297,9 @@ void CheckCardinalDemand (String demand){
   delay(40);
 }
 
+
+
 void loop() {
-   //Serial.println("in");
-   //bleuart.println("nhuainaaaa");
-   //bleuart.println(muca.init());
-   //bleuart.write("après muca");
   
   while (!notifyEnabling) { 
     CheckCardinalDemand(CheckMessageReceived());
@@ -275,6 +310,10 @@ void loop() {
   
   if (message != "")
   {
+    if (message.substring(0,1) == "0")
+    {
+      Gain(message.substring(1));
+    }
     message = "";
   }
   else
@@ -282,18 +321,32 @@ void loop() {
     if (muca.updated()) {
       //bleuart.print("muca ready");
       //Serial.println("muca ready");
-      GetRaw();
+      //GetRaw();
+      GetTouch();
     }
-    /*else
-    {
-      bleuart.print(muca.updated());
-    }*/
-    //SendFalseRawByte();
 
     
   }
   
   delay(16); // waiting 16ms for 60fps
-
-
 }
+
+void Gain(String str) {
+  muca.setGain(str.toInt());
+}
+
+/*
+void Settings() {
+  char *str;
+  char *p = incomingMsg;
+  int settings[4];
+  byte i = 0;
+  while ((str = strtok_r(p, ":", &p)) != NULL)  // Don't use \n here it fails
+  {
+    settings[i] = atoi(str);
+    i++;
+  }
+  incomingMsg[0] = '\0'; // Clear array
+  muca.setConfig(settings[0], settings[1], settings[2], settings[3]);
+}
+*/
