@@ -22,7 +22,7 @@ NB_ROW          = 12
 NB_COLOMN       = 12
 # NB_ROW_MINUS    = 9
 SIZE_PIXEL      = 12
-TOUCH_GAIN      = 3
+TOUCH_GAIN      = 5
 SCREEN_WIDTH    = 1820 # 1280
 SCREEN_HEIGHT   = 880 # 720
 
@@ -78,7 +78,7 @@ def UpdatePixels(screen, device :int):
         # print(raw_table)
         data_table                  = DataParser(raw_table)
         DEVICE[device].data_matrix  = data_table
-        CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
+        # CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
         SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
         # SendMessage("Message received !", device)
         return True
@@ -86,17 +86,58 @@ def UpdatePixels(screen, device :int):
 
 ################ TOUCH ################
 
+
+def TouchBlob(x, y, weight, data_table):
+    x_decimal = x - int(x)
+    y_decimal = y - int(y)
+
+    data_table[int(y) * NB_COLOMN + int(x)] = str( int( int(data_table[int(y) * NB_COLOMN + int(x)]) + weight * ( (1.0 - x_decimal) * (1.0 - y_decimal)  ))) #On point
+
+    # Point colonne/ligne
+
+    if int(x) > 0 :
+        data_table[int(y) * NB_COLOMN + int(x)-1] = str( int( int(data_table[int(y) * NB_COLOMN + int(x)-1]) + weight * ( (1.0 - x_decimal) * (1.0 - y_decimal) / 1.5 ))) # Left
+
+    if int(x) < NB_COLOMN-1 :
+        data_table[int(y) * NB_COLOMN + int(x)+1] = str( int( int(data_table[int(y) * NB_COLOMN + int(x)+1]) + weight * ( x_decimal * (1.0 - y_decimal) ))) # Right
+
+    if int(y) > 0 :
+        data_table[(int(y) - 1) * NB_COLOMN + int(x)] = str( int( int(data_table[(int(y) - 1) * NB_COLOMN + int(x)]) + weight * ( (1.0 - x_decimal) * (1.0 - y_decimal) / 1.5 ))) # Up
+
+    if int(y) < NB_ROW-1 :
+        data_table[(int(y) + 1) * NB_COLOMN + int(x)] = str( int( int(data_table[(int(y) + 1) * NB_COLOMN + int(x)]) + weight * ( (1.0 - x_decimal) * y_decimal ))) # Down
+
+    # Diagnonnales
+
+    if int(x) > 0 and int(y) > 0:
+        data_table[(int(y) - 1) * NB_COLOMN + int(x)-1] = str( int( int(data_table[(int(y) - 1) * NB_COLOMN + int(x)-1]) + weight * ( (1.0 - x_decimal) * (1.0 - y_decimal) / 1.5 ))) # Left-Up
+
+    if int(x) < NB_COLOMN-1 and int(y) > 0:
+        data_table[(int(y) - 1) * NB_COLOMN + int(x)+1] = str( int( int(data_table[(int(y) - 1) * NB_COLOMN + int(x)+1]) + weight * ( x_decimal * (1.0 - y_decimal) / 1.5 ))) # Right-Up
+
+    if int(x) < NB_COLOMN-1 and int(y) < NB_ROW-1:
+        data_table[(int(y) + 1) * NB_COLOMN + int(x)+1] = str( int( int(data_table[(int(y) + 1) * NB_COLOMN + int(x)+1]) + weight * ( x_decimal * y_decimal / 1.5 ))) # Right-Down
+
+    if int(x) > 0 and int(y) < NB_ROW-1:
+        data_table[(int(y) + 1) * NB_COLOMN + int(x)-1] = str( int( int(data_table[(int(y) + 1) * NB_COLOMN + int(x)-1]) + weight * ( (1.0 - x_decimal) * y_decimal / 1.5 ))) # Left-Down
+
+    return data_table
+
+
+
 def TouchSetting(touch_table, data_table):
     # x entre 450 et 1000; y entre 0 et 1000
     # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
     nb_touch = int(touch_table[0])
     for i in range(nb_touch):
-        print ("HERE !")
+        
         pos     = i * 3 + 1
         x = ((float(touch_table[pos]) - 450.0) * 12.0) / (1000.0 - 450.0)
         y = (float(touch_table[pos + 1]) * 12.0) / 1000.0
         weight = int(touch_table[pos + 2]) * TOUCH_GAIN
         print(f"x : {x}, y : {y}, weight : {weight}")
+
+        data_table = TouchBlob(x, y, weight, data_table)
     
     return data_table
 
@@ -113,13 +154,12 @@ def UpdateTouchPixels(screen, device :int):
     if touch_table == "0":
         return False
     else :
-        print(touch_table)
         touch_table                     = DataParser(touch_table)
         data_table                      = TouchSetting(touch_table, CreatePixelTable())
+        DEVICE[device].data_matrix      = data_table
 
-        # DEVICE[device].data_matrix  = data_table
-        # CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
-        # SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
+        CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
+        SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
         # SendMessage("Message received !", device)
         return True
 
@@ -419,6 +459,7 @@ def main():
         try:
             # pygame.draw.rect(SCREEN,BLACK,(0, 0, SCREEN_WIDTH-300, SCREEN_HEIGHT))
             for i in range(len(DEVICE)):  
+                # CleanPixels(SCREEN, DEVICE[i].X, DEVICE[i].Y, DEVICE[i].size_multiplicator)
                 state_raw = UpdatePixels(SCREEN, i)
                 state_touch = UpdateTouchPixels(SCREEN, i)
             pygame.display.update() # Update values on screen
