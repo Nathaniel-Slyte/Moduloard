@@ -10,6 +10,7 @@ class Device:
         self.DATA_QUEUE         = queue.Queue(maxsize=10)
         self.MESSAGE_QUEUE      = queue.Queue(maxsize=10)
         self.CARDINAL_QUEUE     = queue.Queue(maxsize=10)
+        self.TOUCH_QUEUE        = queue.Queue(maxsize=10)
         self.UUID_NORDIC_TX     = ""
         self.UUID_NORDIC_RX     = ""
         self.X                  = 0
@@ -92,17 +93,34 @@ class Device:
                 print("{} Received cardinal indication : {}".format(self.address, int(data[1])))
             except:
                 print("{} Received cardinal indication but fail to add it to queue: {}".format(self.address, int(data[1])))
+        
+        elif int(data[0]) == 2:
+            print("Received")
+            nb_touch = data[1]
+            touch_point = str(nb_touch) + ","
+            for i in range(nb_touch):
+                index           = i*5 + 2
+                touch_point     += str((data[index] << 8) + data[index+1]) + ","        # X coordinates
+                touch_point     += str((data[index+2] << 8) + data[index+3]) + ","      # Y coordinates
+                touch_point     += str(data[index+4]) + ","                             # Weight
+            try: 
+                self.TOUCH_QUEUE.put(touch_point, block = False)
+            except queue.Full:
+                self.Dequeue(1)
+                self.TOUCH_QUEUE.put(data, block = False)
             
-        else:        
+        else:  
+                 
             for i in range(len(data)) :
-
+                # print(f"{int(data[i])},")
                 if int(data[i]) == 0:
                     print("my addresse : {}".format(self.address))
-                    if len(self.table.split(',')) >= 21*12-1:
+
+                    if len(self.table.split(',')) >= 12*12-1:
                         try:
                             self.DATA_QUEUE.put(self.table, block = False)
                         except queue.Full:
-                            self.Dequeue()
+                            self.Dequeue(0)
                             self.DATA_QUEUE.put(self.table, block = False)
                     self.table = ""
                     break
@@ -112,14 +130,24 @@ class Device:
 
 #### START SCREEN FUNCTIONS ####
 
-    def Dequeue(self):
-        try :
-            item = self.DATA_QUEUE.get(block = False)
-        except queue.Empty:
-            return "0"
-        else :
-            self.DATA_QUEUE.task_done()
-            return item
+    def Dequeue(self, queue_index):
+        if queue_index == 0 :
+            try :
+                item = self.DATA_QUEUE.get(block = False)
+            except queue.Empty:
+                return "0"
+            else :
+                self.DATA_QUEUE.task_done()
+                return item
+        
+        if queue_index == 1 :
+            try :
+                item = self.TOUCH_QUEUE.get(block = False)
+            except queue.Empty:
+                return "0"
+            else :
+                self.TOUCH_QUEUE.task_done()
+                return item
     
     def CardinalSet(self, caller: str, cardinal: int):
         if self.CARDINAL_QUEUE.empty() == False:

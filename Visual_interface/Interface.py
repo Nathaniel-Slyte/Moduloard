@@ -18,10 +18,11 @@ CARDINAL = ("South\n", "East\n", "North\n", "West\n")
 
 FPS = 30
 
-NB_ROW          = 21
+NB_ROW          = 12
 NB_COLOMN       = 12
-NB_ROW_MINUS    = 9
+# NB_ROW_MINUS    = 9
 SIZE_PIXEL      = 12
+TOUCH_GAIN      = 3
 SCREEN_WIDTH    = 1820 # 1280
 SCREEN_HEIGHT   = 880 # 720
 
@@ -39,11 +40,13 @@ def DataParser(data : str):
     data.pop()
     return data
 
+################ RAW ################
+
 def SetPixels(screen, data_table, X, Y, multiplicator):
     # print("X: {} Y: {}".format(X,Y))
     pixel = pygame.Surface((SIZE_PIXEL * multiplicator, SIZE_PIXEL * multiplicator))
     
-    for y in range(NB_ROW_MINUS, NB_ROW):
+    for y in range(NB_ROW):
         for x in range(NB_COLOMN):
 
             pos = y * NB_COLOMN + x                               # Position in the X Y matrix
@@ -52,7 +55,7 @@ def SetPixels(screen, data_table, X, Y, multiplicator):
             if rgb >255:
                 rgb = 255
             pixel.fill((rgb, rgb, rgb))                                         # set color of the pixel (3x rgb because grey)
-            screen.blit(pixel, (X + x * SIZE_PIXEL * multiplicator, Y + (y-NB_ROW_MINUS) * SIZE_PIXEL * multiplicator))          # update color of the pixel
+            screen.blit(pixel, (X + x * SIZE_PIXEL * multiplicator, Y + y * SIZE_PIXEL * multiplicator))          # update color of the pixel
 
     # print ("Pixels set !")
 
@@ -60,15 +63,15 @@ def CleanPixels(screen, X, Y, multiplicator):
     # print("X: {} Y: {}".format(X,Y))
     pixel = pygame.Surface((SIZE_PIXEL * multiplicator, SIZE_PIXEL * multiplicator))
 
-    for y in range(NB_ROW_MINUS, NB_ROW):
+    for y in range(NB_ROW):
         for x in range(NB_COLOMN):
             pixel.fill(BLACK)                                               # set color of the pixel (3x rgb because grey)
-            screen.blit(pixel, (X + x * SIZE_PIXEL * multiplicator, Y + (y-NB_ROW_MINUS) * SIZE_PIXEL * multiplicator))    # update color of the pixel
+            screen.blit(pixel, (X + x * SIZE_PIXEL * multiplicator, Y + y * SIZE_PIXEL * multiplicator))    # update color of the pixel
 
     # print ("Pixels set !")
 
 def UpdatePixels(screen, device :int):
-    raw_table = DEVICE[device].Dequeue()
+    raw_table = DEVICE[device].Dequeue(0)
     if raw_table == "0":
         return False
     else :
@@ -79,6 +82,47 @@ def UpdatePixels(screen, device :int):
         SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
         # SendMessage("Message received !", device)
         return True
+
+
+################ TOUCH ################
+
+def TouchSetting(touch_table, data_table):
+    # x entre 450 et 1000; y entre 0 et 1000
+    # NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+    nb_touch = int(touch_table[0])
+    for i in range(nb_touch):
+        print ("HERE !")
+        pos     = i * 3 + 1
+        x = ((float(touch_table[pos]) - 450.0) * 12.0) / (1000.0 - 450.0)
+        y = (float(touch_table[pos + 1]) * 12.0) / 1000.0
+        weight = int(touch_table[pos + 2]) * TOUCH_GAIN
+        print(f"x : {x}, y : {y}, weight : {weight}")
+    
+    return data_table
+
+def CreatePixelTable():
+    data_table = ""
+    for y in range(NB_ROW):
+        for x in range(NB_COLOMN):
+            data_table += "10,"
+    return DataParser(data_table)
+
+
+def UpdateTouchPixels(screen, device :int):
+    touch_table = DEVICE[device].Dequeue(1)
+    if touch_table == "0":
+        return False
+    else :
+        print(touch_table)
+        touch_table                     = DataParser(touch_table)
+        data_table                      = TouchSetting(touch_table, CreatePixelTable())
+
+        # DEVICE[device].data_matrix  = data_table
+        # CleanPixels(screen, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
+        # SetPixels(screen, data_table, DEVICE[device].X, DEVICE[device].Y, DEVICE[device].size_multiplicator)
+        # SendMessage("Message received !", device)
+        return True
+
 
 ################ CONTROL ################
 
@@ -125,11 +169,11 @@ def CardinalCall():
 def PosSetting(current_device : int, post_device, cardinal : int):
     if cardinal != 4 :
         if cardinal == 0 :
-            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y + SIZE_PIXEL*(NB_ROW-NB_ROW_MINUS) + 20)
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y + SIZE_PIXEL*NB_ROW + 20)
         if cardinal == 1 :
             DEVICE[current_device].UpdatePos(DEVICE[post_device].X - SIZE_PIXEL*NB_COLOMN - 20, DEVICE[post_device].Y)
         if cardinal == 2 :
-            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y - SIZE_PIXEL*(NB_ROW-NB_ROW_MINUS) - 20)
+            DEVICE[current_device].UpdatePos(DEVICE[post_device].X, DEVICE[post_device].Y - SIZE_PIXEL*NB_ROW - 20)
         if cardinal == 3 :
             DEVICE[current_device].UpdatePos(DEVICE[post_device].X + SIZE_PIXEL*NB_COLOMN + 20, DEVICE[post_device].Y)
     
@@ -292,7 +336,7 @@ def main():
                 
                 # Interface selection
                 for i in range(len(DEVICE)):
-                    if DEVICE[i].X <= mouse[0] <= DEVICE[i].X + NB_COLOMN * SIZE_PIXEL and DEVICE[i].Y <= mouse[1] <= DEVICE[i].Y + (NB_ROW-NB_ROW_MINUS) * SIZE_PIXEL:
+                    if DEVICE[i].X <= mouse[0] <= DEVICE[i].X + NB_COLOMN * SIZE_PIXEL and DEVICE[i].Y <= mouse[1] <= DEVICE[i].Y + NB_ROW * SIZE_PIXEL:
                         try:
                             print(f"INTERFACE {i} !")
                             selected_matrix = i
@@ -375,7 +419,8 @@ def main():
         try:
             # pygame.draw.rect(SCREEN,BLACK,(0, 0, SCREEN_WIDTH-300, SCREEN_HEIGHT))
             for i in range(len(DEVICE)):  
-                state = UpdatePixels(SCREEN, i)
+                state_raw = UpdatePixels(SCREEN, i)
+                state_touch = UpdateTouchPixels(SCREEN, i)
             pygame.display.update() # Update values on screen
         except:
             e = sys.exc_info()[0]
